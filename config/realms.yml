@@ -1,4 +1,4 @@
-# Default packs — installed automatically on first world setup.
+# Default realms — installed automatically on first world setup.
 # Each entry is a git repo to clone into realms/{name}.
 - name: research
   repo: https://github.com/johnsonr/realm-research.git
