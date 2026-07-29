@@ -12,3 +12,11 @@ packs/*/
 # Guards both the per-workspace override (config/oauth-apps.yml) and the
 # installation default (admin/oauth-apps.yml) by filename match.
 oauth-apps.yml
+
+# Runtime code-mode script/execution churn (not workspace content) — a
+# workspace once accumulated 750k transient scripts, 441 of them committed
+# before this ignore existed (me#564)
+.embabel/codemode/
+
+# Fetched-skill cache (runtime)
+config/skills/.cache/
