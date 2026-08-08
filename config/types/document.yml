@@ -60,6 +60,7 @@
     title: "The document's title."
     uri: "The document's URI/source location."
     ingestionTimestamp: "When the document was ingested (ISO-8601) — filter recency with this, e.g. WHERE d.ingestionTimestamp >= date('…')."
+    tags: "Caller-assigned tags — for a document indexed from a shared folder, the folder's name is a tag by default. A LIST: filter with membership, WHERE 'papers' IN d.tags — NEVER d.tags CONTAINS '…' (substring over a list is a type error). Absent on untagged documents."
     # Per-match data (the matching excerpt/score/mode/rank) is NOT a node property — it lives on the
     # RELEVANT_TO edge (r.snippet / r.score / r.mode / r.rank), because a document reached by several anchors
     # dedups to ONE node and a node property would be clobbered. Read the excerpt as r.snippet.
