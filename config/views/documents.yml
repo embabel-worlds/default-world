@@ -1,0 +1,202 @@
+# Document REDUCTION views — the aggregate surface, shipped so it can be tried.
+#
+# Everything else in config/views is a SUBSET view: `MATCH … RETURN <node>`, rows that ARE nodes,
+# composable as a label. These are the other kind — TABULAR, and terminal. Each RETURNs the result of
+# an LLM reduction over a group of documents (VIRTUAL_CYPHER.md §"aggregations"), so the rows are
+# report-only: a reduction is finalized AFTER Neo4j has ordered the query, so its cell can be
+# RETURNed but can never feed a WHERE, an ORDER BY, or another aggregation. Read them, don't join to
+# them.
+#
+# WHY THESE SHIP. The reductions are the least discoverable part of virtual Cypher — nothing in the
+# schema browser hints that `summarize(d.content, 'their position on X')` is a thing you can write,
+# and the shape has three authoring traps (a literal in the accumulated position, a row expression in
+# the instruction position, an unbounded group) that a first attempt reliably hits. A working,
+# runnable example of each is worth more than the paragraph describing it.
+#
+# COST IS THE THING TO UNDERSTAND. `d.content` is the document's FULL ingested text, not a stored
+# property, and the reduction is chunked internally — so cost scales with total corpus length, not
+# with row count. Measured on a 4-document scope: 6 LLM calls, ~6s. Every view here therefore takes a
+# `limit` and applies it in a `WITH … LIMIT` BEFORE the reduction, which is the only thing standing
+# between a curious click and a hundred LLM calls. Raise it deliberately.
+#
+# SCOPE IS NOT WRITTEN HERE. The scope rewriter binds these bodies to the acting user; no view needs
+# — or is permitted — its own ownership predicate. `$tag`/`$since` narrow WITHIN what is already
+# yours.
+#
+# HONEST MISSES ARE VALUES. A group whose text does not answer the instruction returns the exact
+# sentence "The provided items do not contain this information."; an empty group returns an
+# `UNAVAILABLE:` sentinel. Both mean "no answer" — never read them as the answer.
+
+- name: document_digest
+  description: >-
+    Summarize your documents in one pass — the neutral overview. Optionally scoped to a tag,
+    and steerable: `voice` sets the register, `words` the target length. LLM cost grows with
+    the documents' total length, so `limit` is the dial that matters. Rows: {digest}.
+  params:
+    tag:
+      type: string
+      default: ""
+      description: "Only documents carrying this tag. Blank means all of them."
+    instruction:
+      type: string
+      default: "the main themes across these documents"
+      description: "What the summary should be about."
+    voice:
+      type: string
+      default: "plain and direct"
+      description: "Register/style of the prose — e.g. 'brisk', 'second person, warm', 'a noir narrator'."
+    words:
+      type: int
+      default: 150
+      description: "Target length. A prompt-level target, never a mid-sentence cut."
+    limit:
+      type: int
+      default: 10
+      description: "How many documents to reduce. Every one costs LLM calls proportional to its length."
+  cypher: |
+    MATCH (d:Document)
+    WHERE $tag = '' OR $tag IN d.tags
+    WITH d ORDER BY d.ingestionTimestamp DESC LIMIT $limit
+    RETURN summarize(d.content, $instruction, {ai: {voice: $voice, wordcount: $words}}) AS digest
+
+- name: position_on
+  description: >-
+    "Summarize their position on X." Finds the documents that are ABOUT a topic (semantic, one
+    embedding pass) and then argues from them toward a question — `synthesize` is goal-directed
+    where `summarize` is neutral, so ask it something answerable. Rows: {position}.
+  params:
+    topic:
+      type: string
+      default: "regulation 4b"
+      description: "What the documents must be about — the semantic seed."
+    question:
+      type: string
+      default: "what position do these documents take on regulation 4b"
+      description: "The goal the answer argues toward."
+    voice:
+      type: string
+      default: "plain and direct"
+      description: "Register/style of the prose."
+    limit:
+      type: int
+      default: 5
+      description: "Documents to reduce, best-matching first."
+  # The `about` join is the cheap one: a single embedding pass ranks the corpus, and `r.score`
+  # orders it. `judged` would re-read every candidate with an LLM before the reduction even starts.
+  cypher: |
+    MATCH (:Concept {value: $topic})-[r:RELEVANT_TO {mode: 'about'}]->(d:Document)
+    WITH d, r ORDER BY r.score DESC LIMIT $limit
+    RETURN synthesize(d.content, $question, {ai: {voice: $voice}}) AS position
+
+- name: document_themes
+  description: >-
+    The recurring topics across your documents — labels only, no prose. Cheaper than a summary
+    and a better first look at an unfamiliar corpus: run it before you know what to ask.
+    Rows: {themes}.
+  params:
+    tag:
+      type: string
+      default: ""
+      description: "Only documents carrying this tag. Blank means all of them."
+    focus:
+      type: string
+      default: ""
+      description: "Optional lens — 'risks', 'commitments', 'people'. Blank lets the themes emerge."
+    count:
+      type: int
+      default: 6
+      description: "How many themes to name."
+    limit:
+      type: int
+      default: 20
+      description: "Documents to read."
+  cypher: |
+    MATCH (d:Document)
+    WHERE $tag = '' OR $tag IN d.tags
+    WITH d ORDER BY d.ingestionTimestamp DESC LIMIT $limit
+    RETURN themes(d.content, $focus, $count) AS themes
+
+- name: document_clusters
+  description: >-
+    Semantic groups over document TITLES, each with a counted size and examples. The one
+    reduction whose cost does NOT grow with the group — reach for it when the corpus is large
+    and a summary would blow the time budget. Rows: {clusters}.
+  params:
+    tag:
+      type: string
+      default: ""
+      description: "Only documents carrying this tag. Blank means all of them."
+    groups:
+      type: int
+      default: 6
+      description: "Roughly how many groups to form."
+    limit:
+      type: int
+      default: 200
+      description: "Documents to cluster. Titles are short, so this can be generous."
+  # Titles, not content, on purpose: clustering is about shape, and a title carries enough of it
+  # to group by while keeping this the one view you can point at the whole corpus.
+  cypher: |
+    MATCH (d:Document)
+    WHERE $tag = '' OR $tag IN d.tags
+    WITH d LIMIT $limit
+    RETURN cluster(d.title, $groups) AS clusters
+
+- name: does_the_corpus_say
+  description: >-
+    A three-valued verdict on a claim — true, false, or null for UNKNOWN. Every specific the
+    claim states (a year, a figure, a name) must be supported by the documents or the answer is
+    UNKNOWN; "may" and "at risk of" never support true. Rows: {verdict}.
+  params:
+    claim:
+      type: string
+      default: "these documents commit to a deadline"
+      description: "The claim to judge, written as a statement."
+    tag:
+      type: string
+      default: ""
+      description: "Only documents carrying this tag. Blank means all of them."
+    limit:
+      type: int
+      default: 10
+      description: "Documents to weigh."
+  cypher: |
+    MATCH (d:Document)
+    WHERE $tag = '' OR $tag IN d.tags
+    WITH d ORDER BY d.ingestionTimestamp DESC LIMIT $limit
+    RETURN holds(d.content, $claim) AS verdict
+
+- name: most_detailed_on
+  description: >-
+    Which single document treats a subject best, and why — `argmax` accumulates the title
+    alongside the text so the answer can NAME the winner rather than only quote it. Rows: {winner}.
+  params:
+    criterion:
+      type: string
+      default: "the most detailed and specific treatment of the subject"
+      description: "The comparative rubric the winner is chosen under."
+    tag:
+      type: string
+      default: ""
+      description: "Only documents carrying this tag. Blank means all of them."
+    limit:
+      type: int
+      default: 10
+      description: "Candidates to compare."
+  cypher: |
+    MATCH (d:Document)
+    WHERE $tag = '' OR $tag IN d.tags
+    WITH d ORDER BY d.ingestionTimestamp DESC LIMIT $limit
+    RETURN argmax(d.title, d.content, $criterion) AS winner
+
+# Plain Cypher, no LLM, no cost — here deliberately, as the contrast. Not every question about a
+# corpus needs a reduction, and this is the one to run FIRST: it tells you which `tag` values the
+# views above will accept.
+- name: documents_by_tag
+  description: "How many documents carry each tag — free, instant, and the way to find the tag names the other document views take. Rows: {tag, documents}."
+  cypher: |
+    MATCH (d:Document)
+    WHERE d.tags IS NOT NULL
+    UNWIND d.tags AS tag
+    RETURN tag, count(*) AS documents
+    ORDER BY documents DESC, tag ASC
