@@ -20,7 +20,8 @@ Layout:
 - `channels/` — output channel configs
 - `types/` — dynamic type definitions
 - `apps/` — world-level demo apps shipped with the template (read-only;
-  user vibe-coded apps go in `data/apps/` and shadow these by name)
+  user vibe-coded apps go in `data/apps/`, served at `/apps/workspace/<name>`;
+  these serve at `/apps/world/<name>`)
 
 If you want to preserve customizations across a reset, edit them in the
 default-world template repo instead — those become the new starting point.

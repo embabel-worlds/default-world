@@ -7,9 +7,9 @@
 //
 // A component (markup in a SEPARATE .tpl file, fetched once at module load):
 //
-//   import { cardComponent } from '/apps/entity-card.js';
+//   import { cardComponent } from '/apps/world/entity-card.js';
 //   export default await cardComponent({
-//     fragmentUrl: '/apps/Person.tpl',      // the HTML fragment, its own file
+//     fragmentUrl: '/apps/world/Person.tpl', // the HTML fragment, its own file
 //     styles:      `.x{ ... }`,             // scoped to this card (Shadow DOM)
 //     bind(root, entity, fields) { ... },   // optional: computed bits
 //   });

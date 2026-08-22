@@ -3,7 +3,7 @@
 // `start` in the user's own timezone (Intl runs in the user's browser). No
 // framework.
 
-import { cardComponent } from '/apps/entity-card.js';
+import { cardComponent } from '/apps/world/entity-card.js';
 
 const styles = `
   .meet{display:flex;flex-direction:column;gap:5px;font-family:'Inter',system-ui,sans-serif;}
@@ -22,7 +22,7 @@ function formatStart(start) {
 }
 
 export default await cardComponent({
-  fragmentUrl: '/apps/MeetingSignal.tpl',
+  fragmentUrl: '/apps/world/MeetingSignal.tpl',
   styles,
   bind(root, entity, f) {
     const time = formatStart(f.start);

@@ -145,6 +145,9 @@
     async function moduleFor(type) {
       if (type in cache) return cache[type];
       let mod = null;
+      // Deliberately the FLAT path: the realm shipping a type's component is
+      // unknown here, and /apps/<file> resolves by precedence and redirects to
+      // the canonical /apps/<scope>/<file>. ES module loading follows the 301.
       try { mod = await import(`/apps/${type}.component.js`); }
       catch (e) { /* no custom component — generic fallback */ }
       cache[type] = mod;

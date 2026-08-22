@@ -3,7 +3,7 @@
 // Shadow DOM; the computed bits (initials, mailto, the role line) are the bind
 // hook. No framework.
 
-import { cardComponent } from '/apps/entity-card.js';
+import { cardComponent } from '/apps/world/entity-card.js';
 
 const styles = `
   .person{display:flex;align-items:center;gap:11px;font-family:'Inter',system-ui,sans-serif;}
@@ -19,7 +19,7 @@ const styles = `
 `;
 
 export default await cardComponent({
-  fragmentUrl: '/apps/Person.tpl',
+  fragmentUrl: '/apps/world/Person.tpl',
   styles,
   bind(root, entity, f) {
     const initials = String(entity.name || '?').trim().split(/\s+/)

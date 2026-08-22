@@ -14,7 +14,7 @@ writes the HTML for you — **you** are the coder. Two tools:
    apps, and the typed tool surface. Read it, then write the complete single-file
    HTML against it.
 2. **`vibe_app_save({ name, html })`** → validates your HTML (no external fetch,
-   escaped output, banner, etc.), serves it at `/apps/<name>`, and returns the URL.
+   escaped output, banner, etc.), serves it at `/apps/workspace/<name>`, and returns the URL.
    On rejection it returns the violations — fix them and call again.
 
 ```ts
@@ -48,7 +48,7 @@ vibe_app_save({ name: string, html: string }) // → { status, name, url } | { s
    the user hits with no way to repair it. Run your queries first; if the data you
    expect isn't in a repository collection, it may be knowledge-graph data — reach
    it with `gateway.kg.query` / `gateway.kg.ask`, not `list_entries`.
-5. **Surface the result.** `vibe_app_save` returns the `/apps/<name>` URL — give it
+5. **Surface the result.** `vibe_app_save` returns the `/apps/workspace/<name>` URL — give it
    to the user.
 
 ## When to use it (vs alternatives)

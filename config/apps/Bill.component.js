@@ -2,7 +2,7 @@
 // workspace. HTML fragment + Shadow-DOM-scoped styles + a bind hook for the
 // amount / due / badge. No framework.
 
-import { cardComponent } from '/apps/entity-card.js';
+import { cardComponent } from '/apps/world/entity-card.js';
 
 const styles = `
   .bill{display:flex;align-items:flex-start;gap:11px;font-family:'Inter',system-ui,sans-serif;}
@@ -18,7 +18,7 @@ const styles = `
 `;
 
 export default await cardComponent({
-  fragmentUrl: '/apps/Bill.tpl',
+  fragmentUrl: '/apps/world/Bill.tpl',
   styles,
   bind(root, entity, f) {
     root.querySelector('[data-name]').textContent = f.name || entity.name || 'Bill';
