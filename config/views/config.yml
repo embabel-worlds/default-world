@@ -1,0 +1,55 @@
+# THE WORLD'S VIEW OF ITSELF — saved views over the config catalog (ConfigCatalog.kt:
+# "Oracle's dictionary/V$ views, for the KG"). The catalog is host infrastructure and
+# is present in EVERY world, so unlike every other file here these views answer on a
+# world with no data in it at all.
+#
+# WHICH IS WHY THEY SHIP. A brand-new appliance has an empty graph, no documents and
+# possibly no model, so the first honest question — "what can this thing actually do?"
+# — had no answer inside the product; you had to go and read a repository. These are
+# plain Cypher over labels the host materializes, so they need no LLM, no key, no
+# ingested document and no realm. They work the second the appliance is up.
+#
+# Every one is a SUBSET view returning a single node variable, so they compose like
+# any other label: MATCH (v:my_views) WHERE v.parameterized RETURN v.name.
+#
+# The Config* labels and the HAS_CONFIG edge are RESERVED by the host — a realm must
+# not declare them — so these names cannot be shadowed by anything installed later.
+
+- name: my_views
+  description: "Saved views in this world, including these — a subset of ConfigView. Answers 'what can I ask?'"
+  cypher: |
+    MATCH (me:AssistantUser)-[:HAS_CONFIG]->(v:ConfigView) RETURN v
+
+- name: my_realms
+  description: "Realms installed in this world — a subset of ConfigRealm. Answers 'what capabilities does it have?'"
+  cypher: |
+    MATCH (me:AssistantUser)-[:HAS_CONFIG]->(r:ConfigRealm) RETURN r
+
+- name: my_skills
+  description: "Skills available in this world — a subset of ConfigSkill."
+  cypher: |
+    MATCH (me:AssistantUser)-[:HAS_CONFIG]->(s:ConfigSkill) RETURN s
+
+- name: my_automations
+  description: "Handlers in this world — scheduled jobs and event reactions. A subset of ConfigAction."
+  cypher: |
+    MATCH (me:AssistantUser)-[:HAS_CONFIG]->(a:ConfigAction) RETURN a
+
+- name: my_models
+  description: "Which model runs which job — a subset of ConfigLlmRole. Answers 'what is this costing me, and where?'"
+  cypher: |
+    MATCH (me:AssistantUser)-[:HAS_CONFIG]->(m:ConfigLlmRole) RETURN m
+
+# The two diagnostic ones. A realm that half-loaded is the single most confusing state
+# an appliance gets into — it is installed, it is listed, and the thing you wanted from
+# it is silently absent — so both failure surfaces are one query away rather than
+# buried in a log.
+- name: realms_with_problems
+  description: "Installed realms that did not load cleanly — start here when a realm is present but does nothing."
+  cypher: |
+    MATCH (me:AssistantUser)-[:HAS_CONFIG]->(r:ConfigRealm) WHERE r.problems > 0 RETURN r
+
+- name: skipped_apis
+  description: "APIs a realm declared that were skipped at load, and why — usually a missing credential."
+  cypher: |
+    MATCH (me:AssistantUser)-[:HAS_CONFIG]->(a:ConfigSkippedApi) RETURN a
