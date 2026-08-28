@@ -1,0 +1,62 @@
+# Console tips — the stock set, shared by every world.
+#
+# HERE RATHER THAN IN THE JAR. These shipped inside the assistant image, which meant
+# fixing a sentence in a tip needed a server release: the slowest possible path for the
+# fastest-changing kind of content. Hints resolve through the world config cascade
+# (user -> org -> this repo), so a tip edited here reaches every world without a rebuild.
+#
+# A world overrides any of these by putting a file of the same name in its own
+# config/hints/, and a realm ships its own in `hints/` — those arrive and leave with the
+# realm, which is why a realm's tips can name questions only that realm can answer.
+#
+# surface: me | console | all. This set is the console.
+
+# The PLATFORM's own tips — what a world is and what it can do, above any one realm's
+# content. tips.yml is the Me chat experience; this file is the ideas layer, surfaced
+# mostly to the console (with the conceptual ones shared). Realm-specific tips ship with
+# realms; an operator overrides this file by name in {worldBase}/admin/hints/.
+
+- surface: console
+  category: hint
+  title: Wire in a coding agent
+  body: "Claude Code, Codex or any MCP client can connect to this world — one command from the **Coding agents** tab. The agent then queries your graph, runs your views, writes handlers, builds apps, installs realms: everything this console does, it can do, with your permission model in force."
+
+- surface: all
+  category: did-you-know
+  title: One query, several systems
+  body: "Virtual Cypher lets one query walk data that lives in different systems — your CRM, a knowledge graph, live news — as if it were one graph. Nothing is mirrored: virtual joins fetch on demand, materialize for that query, and roll back."
+
+- surface: all
+  category: hint
+  title: Save the question, not the answer
+  body: "A view is a question with a name: joins, dedupe and aggregation written once, tested once, then selected by natural language forever after. When an ask ever disappoints, the fix is usually a view that claims the question."
+
+- surface: console
+  category: hint
+  title: Programs that react
+  body: "A handler is a small TypeScript program that runs on a schedule or reacts to a signal — every morning at 9, or whenever a PR opens. **Handler Studio** edits it with completion generated from this world's own typed surface, and dry-runs it against a real recent event before you trust it."
+
+- surface: all
+  category: did-you-know
+  title: Judgment inside the query
+  body: "Queries can classify and compose prose in-flight — `classify()` labels every row from a closed set with your rubric, `synthesize()` writes a briefing from the facts the query assembled. The figures stay exact; only the labels and prose are the model's."
+
+- surface: console
+  category: hint
+  title: A realm is a capability, packaged
+  body: "A realm is a git repo of capability — types, views, handlers, apps, tips like this one — installed into your world and updated like software. The **Switchboard** shows what's installed; the directory shows what you could add."
+
+- surface: console
+  category: hint
+  title: Teach it a database
+  body: "**Learn a source** turns a database this machine can reach into a realm: it reads the schema, proposes types and views, and you approve what gets kept. The world then answers questions over it in English."
+
+- surface: all
+  category: hint
+  title: Ask what it has read
+  body: "Ingested documents join the graph: ask across them, get answers with citations, and traverse from a document to the people and companies it mentions. Ingestion is explicit — the world reads what you give it, nothing else."
+
+- surface: console
+  category: did-you-know
+  title: Every wrong answer becomes a test
+  body: "Realms ship with the questions users actually type, each checked against the source system to the cent. When an answer disappoints, that question is added — so the same wrong answer cannot happen twice."
