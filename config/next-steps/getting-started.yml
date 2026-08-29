@@ -41,21 +41,29 @@
     WHERE d.everConnected
     RETURN d
 
-- id: install-realm
+- id: unlock-integration
   order: 20
   surface: all
   category: capability
-  icon: package
-  title: Install a realm
+  icon: key
+  title: Unlock an integration that is waiting for a key
   body: >
-    Realms are where this world gets its knowledge of the outside — a source of data, the
-    verbs to act on it, and the vocabulary to ask about it. Installing one is the fastest
-    way to make the graph about something.
+    Some realms arrive complete and some arrive inert: they declare an API they cannot call
+    until you give them a credential. Each one is a source this world could be reading and
+    is not. Adding a key turns the whole realm on — its data, its verbs and its vocabulary.
   action:
-    label: Browse realms
-    chatInput: What realms could I install?
+    label: What is waiting
+    chatInput: Which of my integrations are waiting for an API key, and which key does each need?
+  # NOT "install a realm", which this template pre-satisfies: a stock world ships with realms
+  # aboard, so that step read DONE on a fresh appliance before its owner had done anything —
+  # exactly the trap `userAuthored` exists to avoid, one level up in the content.
+  #
+  # Counting to zero, because a row means done: the step clears when nothing is left inert.
   doneWhen: |
-    MATCH (r:Realm) WHERE r.installed RETURN r LIMIT 1
+    MATCH (me:AssistantUser)-[:HAS_CONFIG]->(s:ConfigSkippedApi)
+    WITH count(s) AS waiting
+    WHERE waiting = 0
+    RETURN waiting
 
 - id: save-view
   order: 30
