@@ -1,29 +1,34 @@
-# THE PLATFORM TOUR, not a realm's — how somebody gets a coding agent building on this world.
+# THE PLATFORM TOUR, not a realm's — how somebody actually gets a coding agent working on this
+# world. It is the tour with the most at stake and the least to do, and both of those are the point.
 #
-# It is the tour with the most at stake and the least to drive: the important part happens in a
-# TERMINAL, which is not this app and must not be. A tour cannot type into somebody's shell, and
-# reaching for the accessibility tree to do it would be the wrong trade — a permission grant and a
-# script that rots on the next redesign of an app we do not own.
+# THE APPLIANCE IS ALREADY WIRED. `wire_coding_agents()` runs during setup, on the host, and does
+# `claude mcp add --transport http --scope user embabel <code door> --header "Authorization:
+# Bearer …"` with a token minted once in that process. So by the time anybody reads this, the
+# registration exists and the only thing left is to START the agent. An earlier draft of this tour
+# opened the Connect panel and pressed "Wire Claude Code", which is redundant work on something
+# setup already did — and worse, it implies to a user who IS set up that they are not.
 #
-# So it does the part it can (wire the server, which is one real button) and then HANDS OVER — and
-# this is the step worth understanding: the hand-over is `watchable`, so the appliance answers for
-# the user. It knows the moment a coding agent completes a handshake at the code door, so the tour
-# waits for either the button or the world, and carries on by itself the instant Claude connects.
-# The user is in another window; nobody is there to press Done. Being told by the graph is the only
-# honest way to know they succeeded, and it is something only an appliance that holds its own
-# config catalog could do.
+# WHAT THE APPLIANCE CANNOT KNOW is whether `claude mcp add` ran: registration lives in
+# `~/.claude.json`, on the user's disk, not in the graph. What it does know is whether an agent has
+# ever COMPLETED A HANDSHAKE at the code door — which is the better fact anyway, because
+# registered-but-never-started is precisely the state this tour exists to move somebody out of.
 #
-# `surface: me` because the Me app is the only surface with an addressable coding-agent panel. The
-# console keeps that wiring in a Settings drawer, which no tab name reaches — so this tour is
-# refused there by name rather than half-working. Give the console's drawer a `data-control` and
-# this can lose the scope.
+# So the important step happens in a TERMINAL, which is not this app and must not be. A tour cannot
+# type into somebody's shell, and reaching for the accessibility tree to do it would be the wrong
+# trade — a permission grant and a script that rots on the next redesign of an app we do not own.
+# It hands over instead, and because the hand-over declares a precondition, the world answers for
+# the user: the tour carries on by itself the instant the agent connects. Nobody is at this window
+# to press Done.
+#
+# `surface: all` — it names no panel this console lacks. The one fallback that WOULD need a panel
+# (re-wiring by hand) is narration, not a step, precisely so this runs everywhere.
 
 - id: FirstCodingAgent
   name: Put a coding agent to work
-  surface: me
+  surface: all
   description: >-
-    Wire Claude Code to this world, then ask it to build you a realm. The tour waits while you
-    are in your terminal and picks up by itself the moment it connects.
+    Your appliance is already registered with Claude Code. This is the two minutes that turns
+    that into a realm — and the tour waits while you are in your terminal.
 
   steps:
     - say: |
@@ -31,26 +36,22 @@
         agent talking to your world over MCP — reading the graph, writing to it, and authoring
         realms, views and handlers without anybody hand-editing YAML.
 
-        Two minutes, and one of them is in your terminal.
+        **Setup already registered it.** `claude mcp add` ran during install, pointed at this
+        world's code door, with a token minted for you. There is nothing to configure.
 
-    - open: panel.connect
+    - open: panel.realms
       say: |
-        This panel registers the appliance with a coding agent — it writes the MCP server
-        configuration so the agent can find your world.
+        This is what your agent will be changing. Whatever it builds arrives here — same directory,
+        same lifecycle, and `embabel realms` removes it the same way anything else goes.
 
-    - invoke: button.wire-claude
-      say: |
-        Registered. Note what that did and did not do: **registering is not connecting.** The
-        config is written; nothing has spoken to the door yet.
-
-    - open: panel.connect
+    # THE POINT OF THIS FILE. The step happens somewhere this app cannot see, so the world watches
+    # for it instead. A handshake at the CODE door specifically: a chat client saying hello is not
+    # this, which is why the query names the door rather than counting connections.
+    - open: panel.realms
       by: user
       hint: >-
-        Now open a terminal, run `claude`, and ask it something about this world — try
-        "what realms are installed?". Come back when you have; I will notice by myself.
-      # THE POINT OF THIS FILE. A handshake at the CODE door specifically — a chat client saying
-      # hello is not this. The tour resolves the moment this returns a row, so the user never has
-      # to come back and press anything.
+        Open a terminal, run `claude`, and ask it "what realms are installed?" — I will notice by
+        myself when it connects, so you can leave this window alone.
       doneWhen: |
         MATCH (me:AssistantUser)-[:HAS_CONFIG]->(d:ConfigMcpDoor {name: 'code'})
         WHERE d.everConnected
@@ -59,22 +60,25 @@
         **Connected.** That was the appliance noticing, not you telling it — the world knew the
         moment your agent completed a handshake at the code door.
 
+        (If it never connects: the Coding Agents panel has the command to register it by hand, for
+        an agent on another machine or an install where you said no at the prompt.)
+
     - say: |
         Now ask it for something real:
 
         > *Create me an Embabel realm for a data source I care about.*
 
-        It has `realm_brief` to start from, `realm_write` and `realm_validate` to author with, and
-        `realm_install` to put the result in this world. A realm it builds arrives here the same
-        way any other does.
+        It starts at `realm_brief`, writes with `realm_write`, checks with `realm_validate` and
+        puts the result in this world with `realm_install`. Eighty-odd tools, and those four are
+        the loop.
 
-    - open: panel.realms
-      say: |
-        And this is where it lands. A realm your agent wrote is indistinguishable from one you
-        installed — same directory, same lifecycle, and `embabel realms` removes it the same way.
+        One thing to know first: **realm authoring needs DEVELOPER mode.** In `ASSISTANT` mode an
+        agent sees your data and nothing else — the right default, and not the one you want here.
+        Coding Agents has the switch.
 
     - say: |
-        One thing worth knowing before you start: the agent is talking to **your** world, over the
-        code door, with your credentials. It can read the graph and write config. It cannot reach
-        anything this appliance cannot already reach, which is the boundary that makes handing it
-        the keys reasonable.
+        The boundary, stated plainly, because you are handing an agent the keys.
+
+        It talks to **your** world, through the code door, as you. It can read the graph and write
+        configuration. It cannot reach anything this appliance cannot already reach — and
+        everything it builds is a file in a directory you can read, review and delete.
