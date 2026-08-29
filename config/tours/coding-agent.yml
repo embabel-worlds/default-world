@@ -1,0 +1,80 @@
+# THE PLATFORM TOUR, not a realm's — how somebody gets a coding agent building on this world.
+#
+# It is the tour with the most at stake and the least to drive: the important part happens in a
+# TERMINAL, which is not this app and must not be. A tour cannot type into somebody's shell, and
+# reaching for the accessibility tree to do it would be the wrong trade — a permission grant and a
+# script that rots on the next redesign of an app we do not own.
+#
+# So it does the part it can (wire the server, which is one real button) and then HANDS OVER — and
+# this is the step worth understanding: the hand-over is `watchable`, so the appliance answers for
+# the user. It knows the moment a coding agent completes a handshake at the code door, so the tour
+# waits for either the button or the world, and carries on by itself the instant Claude connects.
+# The user is in another window; nobody is there to press Done. Being told by the graph is the only
+# honest way to know they succeeded, and it is something only an appliance that holds its own
+# config catalog could do.
+#
+# `surface: me` because the Me app is the only surface with an addressable coding-agent panel. The
+# console keeps that wiring in a Settings drawer, which no tab name reaches — so this tour is
+# refused there by name rather than half-working. Give the console's drawer a `data-control` and
+# this can lose the scope.
+
+- id: FirstCodingAgent
+  name: Put a coding agent to work
+  surface: me
+  description: >-
+    Wire Claude Code to this world, then ask it to build you a realm. The tour waits while you
+    are in your terminal and picks up by itself the moment it connects.
+
+  steps:
+    - say: |
+        This appliance is meant to be **built on**, and the thing that builds on it is a coding
+        agent talking to your world over MCP — reading the graph, writing to it, and authoring
+        realms, views and handlers without anybody hand-editing YAML.
+
+        Two minutes, and one of them is in your terminal.
+
+    - open: panel.connect
+      say: |
+        This panel registers the appliance with a coding agent — it writes the MCP server
+        configuration so the agent can find your world.
+
+    - invoke: button.wire-claude
+      say: |
+        Registered. Note what that did and did not do: **registering is not connecting.** The
+        config is written; nothing has spoken to the door yet.
+
+    - open: panel.connect
+      by: user
+      hint: >-
+        Now open a terminal, run `claude`, and ask it something about this world — try
+        "what realms are installed?". Come back when you have; I will notice by myself.
+      # THE POINT OF THIS FILE. A handshake at the CODE door specifically — a chat client saying
+      # hello is not this. The tour resolves the moment this returns a row, so the user never has
+      # to come back and press anything.
+      doneWhen: |
+        MATCH (me:AssistantUser)-[:HAS_CONFIG]->(d:ConfigMcpDoor {name: 'code'})
+        WHERE d.everConnected
+        RETURN d
+      say: |
+        **Connected.** That was the appliance noticing, not you telling it — the world knew the
+        moment your agent completed a handshake at the code door.
+
+    - say: |
+        Now ask it for something real:
+
+        > *Create me an Embabel realm for a data source I care about.*
+
+        It has `realm_brief` to start from, `realm_write` and `realm_validate` to author with, and
+        `realm_install` to put the result in this world. A realm it builds arrives here the same
+        way any other does.
+
+    - open: panel.realms
+      say: |
+        And this is where it lands. A realm your agent wrote is indistinguishable from one you
+        installed — same directory, same lifecycle, and `embabel realms` removes it the same way.
+
+    - say: |
+        One thing worth knowing before you start: the agent is talking to **your** world, over the
+        code door, with your credentials. It can read the graph and write config. It cannot reach
+        anything this appliance cannot already reach, which is the boundary that makes handing it
+        the keys reasonable.
