@@ -44,6 +44,27 @@
         This is what your agent will be changing. Whatever it builds arrives here — same directory,
         same lifecycle, and `embabel realms` removes it the same way anything else goes.
 
+    # THE PICTURE, and it goes HERE rather than on the step below, for two reasons that are really
+    # the same one. A `say` on a hand-over step lands AFTER the user comes back, so an illustration
+    # of the place they were going would arrive once they had been; and a hint is painted as plain
+    # text on purpose, because it is an instruction and not prose. So the last thing they see
+    # before leaving is a step of its own.
+    #
+    # It is a DRAWING and says so. The shape is what transfers — one command, a connected server,
+    # a question answered by a tool call. A screenshot would additionally claim a version, a theme
+    # and a working directory, and be wrong the week any of those changed.
+    #
+    # `/apps/world/...` is this appliance's own app store, and the sanitizer deletes an image from
+    # anywhere else. That rule is not incidental: tours are files people exchange, and an image on
+    # a host the author controls would quietly report every reader who opened one.
+    - say: |
+        One terminal window, and you are done. Roughly what it looks like:
+
+        ![A terminal running claude against this world](/apps/world/tour-claude-code.svg)
+
+        Two lines: `claude` to start it, then ask in English. The `embabel` server is the one
+        setup registered — your world, answering as you.
+
     # THE POINT OF THIS FILE. The step happens somewhere this app cannot see, so the world watches
     # for it instead. A handshake at the CODE door specifically: a chat client saying hello is not
     # this, which is why the query names the door rather than counting connections.
