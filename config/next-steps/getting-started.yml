@@ -1,0 +1,115 @@
+# What next — the stock onboarding steps, shared by every world.
+#
+# A STEP IS A QUESTION, NOT A TICKBOX. `doneWhen` is Cypher, run as the user looking at
+# the panel; a row means done, no rows means not yet. Nothing is remembered, so nothing
+# can go stale: uninstall the realm and its step comes back, because the step describes
+# the world as it is rather than what somebody once clicked.
+#
+# Write the query against ABSENCE, and be careful which absence. `MATCH (v:ConfigView)`
+# is answered by the views this repo ships, so it would report every fresh appliance as
+# one whose owner has been busy. `WHERE v.userAuthored` is the question actually worth
+# asking. The same trap sits under realms (installed is not built) and MCP (configured is
+# not connected).
+#
+# The server reads `id` and `doneWhen` and NOTHING ELSE. Every other field here is
+# carried through to whatever is drawing the panel, so `href`, `chatInput`, `surface` and
+# `order` mean exactly what that client decides they mean — and a new field costs an edit
+# to this file, not a server release.
+#
+# A world overrides any of these with a file of the same name in its own
+# config/next-steps/, and a realm ships its own in `next-steps/` — those arrive and leave
+# with the realm, which is how a realm asks for the setup only it knows it needs.
+
+- id: coding-agent
+  order: 10
+  surface: all
+  category: setup
+  icon: terminal
+  title: Point a coding agent at this world
+  body: >
+    A coding agent connected over MCP is how realms, views and handlers get built here —
+    it can read the graph, write to it, and author new capability without anybody
+    hand-editing YAML. Registering the server is not the same as reaching it, so this
+    clears when a client has actually completed a handshake at the code door.
+  action:
+    label: How to connect one
+    chatInput: How do I connect a coding agent to this world over MCP?
+  # The CODE door specifically. Something has connected the moment a chat client says
+  # hello, and that is not this step.
+  doneWhen: |
+    MATCH (me:AssistantUser)-[:HAS_CONFIG]->(d:ConfigMcpDoor {name: 'code'})
+    WHERE d.everConnected
+    RETURN d
+
+- id: install-realm
+  order: 20
+  surface: all
+  category: capability
+  icon: package
+  title: Install a realm
+  body: >
+    Realms are where this world gets its knowledge of the outside — a source of data, the
+    verbs to act on it, and the vocabulary to ask about it. Installing one is the fastest
+    way to make the graph about something.
+  action:
+    label: Browse realms
+    chatInput: What realms could I install?
+  doneWhen: |
+    MATCH (r:Realm) WHERE r.installed RETURN r LIMIT 1
+
+- id: save-view
+  order: 30
+  surface: all
+  category: capability
+  icon: bookmark
+  title: Save a query you will ask again
+  body: >
+    A view is a question worth keeping: name it once and it becomes part of this world's
+    vocabulary, for you and for any agent working here. The ones shipped in the box do
+    not count for this — the point is a question that is yours.
+  action:
+    label: Save one
+    chatInput: Save this as a view I can run again
+  # userAuthored, NOT just any ConfigView: every appliance ships with views, and counting
+  # those would congratulate somebody who has done nothing.
+  doneWhen: |
+    MATCH (me:AssistantUser)-[:HAS_CONFIG]->(v:ConfigView)
+    WHERE v.userAuthored
+    RETURN v LIMIT 1
+
+- id: write-handler
+  order: 40
+  surface: all
+  category: capability
+  icon: bolt
+  title: Write a handler that runs without you
+  body: >
+    A handler is a small TypeScript program this world runs on a schedule or when
+    something happens — the difference between a knowledge graph you query and one that
+    does something while you are asleep.
+  action:
+    label: Write one
+    chatInput: Write me a handler that runs on a schedule
+  doneWhen: |
+    MATCH (me:AssistantUser)-[:HAS_CONFIG]->(a:ConfigAction)
+    WHERE a.userAuthored
+    RETURN a LIMIT 1
+
+- id: build-realm
+  order: 50
+  surface: all
+  category: capability
+  icon: hammer
+  title: Build a realm of your own
+  body: >
+    The last step, and the one that changes what this is: a realm you wrote, about a
+    source nobody has packaged yet. A coding agent does the work — describe the source and
+    the questions you want to ask of it.
+  action:
+    label: Build one
+    chatInput: Help me build a realm for a data source I care about
+  # Built here, not installed from a remote: origin `world` or `path`. A realm this user
+  # wrote and pushed to git is indistinguishable on disk from one they downloaded, so this
+  # step stays outstanding for them — the honest answer, not a flattering one.
+  doneWhen: |
+    MATCH (r:Realm) WHERE r.installed AND r.userAuthored RETURN r LIMIT 1
