@@ -6,3 +6,6 @@
 - name: github
   repo: https://github.com/embabel-worlds/realm-github.git
   version: "main"
+- name: spec
+  repo: https://github.com/embabel-worlds/realm-spec.git
+  version: "main"
