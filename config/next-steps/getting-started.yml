@@ -20,6 +20,41 @@
 # config/next-steps/, and a realm ships its own in `next-steps/` — those arrive and leave
 # with the realm, which is how a realm asks for the setup only it knows it needs.
 
+- id: take-the-tour
+  order: 5
+  surface: all
+  category: setup
+  icon: play
+  title: Take the two-minute tour
+  body: >
+    A tour drives this console on your own data — it opens the panels, runs the views and
+    explains what just happened. It is the quickest way to see what a graph answers that a
+    pile of separate systems cannot, and it stops between steps so you set the pace.
+  # `tour` is this world's field, read by whatever is drawing the panel — the server passes
+  # it through untouched, like `href` and `chatInput`. It names the DECLARED id, not the one
+  # a world prefixes, so the same step keeps working when this tour arrives from a template.
+  action:
+    label: Start the tour
+    tour: FirstQuestion
+    # For a surface with no tour runner. A client that cannot start one falls through to this
+    # rather than showing a button that does nothing.
+    chatInput: What can this world already answer?
+
+  # ONE SIGNAL, deliberately. The honest condition is "this person is past needing an
+  # introduction", and the truest version of that would be a view OR a handler OR a connected
+  # agent. Scoped Cypher has no UNION and will not bind an unlabelled node, and the
+  # collect-and-concatenate rewrite it suggests instead short-circuits: with no views the
+  # first MATCH yields nothing and the second half never runs, so the compound condition
+  # would answer "not yet" to somebody who had written ten handlers. A single true signal
+  # beats a compound one that is wrong in exactly the case it exists for.
+  #
+  # userAuthored, NOT any ConfigView — every appliance ships views, and counting those would
+  # retire this step before anybody had seen anything.
+  doneWhen: |
+    MATCH (me:AssistantUser)-[:HAS_CONFIG]->(v:ConfigView)
+    WHERE v.userAuthored
+    RETURN v LIMIT 1
+
 - id: coding-agent
   order: 10
   surface: all
