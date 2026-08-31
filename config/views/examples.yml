@@ -21,7 +21,7 @@
 # label supplies overrides — MATCH (p:recent_correspondents {limit: 3}) RETURN p.name — and the console
 # renders the params as a small form, defaults prefilled.
 - name: recent_correspondents
-  description: "People you have emailed, capped — tune the cap without editing Cypher."
+  description: "People you have emailed, MOST RECENT FIRST (by the last message either way), capped."
   params:
     limit:
       type: int
@@ -31,9 +31,22 @@
       type: string
       default: ""
       description: "Only people whose name contains this text."
+  # ORDER BY IS NOT OPTIONAL IN A VIEW NAMED "recent_*". This body had no ORDER BY at all, so it
+  # returned an arbitrary slice while its name promised recency. Measured 2026-08-01: asked "who have
+  # I emailed most recently?", two independent models (qwen3.6 and Haiku) both called this view with
+  # limit 1 — correct routing, exactly what the surface tells them to do — and both got a contact
+  # whose last message was 59 days old, when the true most-recent was 44. The view lied and the
+  # clients relayed it.
+  #
+  # Ordered on the EMAILED edge's `lastAt`, which is the authoritative timestamp. Deliberately NOT on
+  # the decorated `p.lastInteractionDays`: that property stores a time-RELATIVE value as a snapshot
+  # (days-since, computed once at decoration time), so it is stale the day after it is written — on
+  # this world all 36 contacts disagree with the edge by >5 days and 11 are NEGATIVE, i.e. claiming a
+  # last interaction in the future. Never sort by a stored "days ago".
   cypher: |
-    MATCH (me:AssistantUser)-[:EMAILED]->(p:Person)
+    MATCH (me:AssistantUser)-[e:EMAILED]->(p:Person)
     WHERE $nameContains = '' OR toLower(p.name) CONTAINS toLower($nameContains)
+    WITH p, e.lastAt AS lastAt ORDER BY lastAt DESC
     WITH p LIMIT $limit RETURN p
 
 # A MATERIALISED view: its result nodes are cached (committed) and a reference reads the cache instead of

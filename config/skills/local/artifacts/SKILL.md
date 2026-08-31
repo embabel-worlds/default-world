@@ -1,6 +1,6 @@
 ---
 name: artifacts
-description: World artifacts — saved generated files (apps, code, datasets, diagrams). For "show my apps", "list diagrams", "delete the X file", "open my dataset", or referencing a generated artifact by name. NOT the JS/Python sandbox's own filesystem (`/world/scripts`) — use `fs` / `bash_run("ls ...")` inside execute_* for that.
+description: World artifacts — saved generated files (apps, code, datasets, diagrams). For "show my apps", "list diagrams", "delete the X file", "open my dataset", or referencing a generated artifact by name. NOT the sandbox's own scratch filesystem, which is per-script and not addressable here.
 ---
 
 # Artifacts (world-saved files)
