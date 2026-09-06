@@ -40,27 +40,55 @@
         a set of documents. Each one brings types, queries and sometimes scheduled jobs, and takes
         them away again when you remove it.
 
+    # THE TOUR BRANCHES ON WHAT IS HERE. `when` is a positive precondition: the step runs only
+    # when the query returns a row. The documents leg applies when at least one document is
+    # indexed; the other leg applies when none is. Without the branch this tour submitted the
+    # question to Documents on an empty appliance, got "No answer was produced", and then
+    # congratulated the user on an answer assembled from their material (me#1131).
     - open: panel.documents
+      when: MATCH (d:Document) RETURN d LIMIT 1
       say: |
         **Documents** is the other half. Anything you index here is converted, chunked and embedded
         locally, and becomes searchable alongside everything the realms know.
 
     - set: field.question
+      when: MATCH (d:Document) RETURN d LIMIT 1
       to: "{{ question }}"
 
     - invoke: button.ask
+      when: MATCH (d:Document) RETURN d LIMIT 1
       say: Asking now — the first question on a cold appliance can take a moment.
 
     - wait: state.documents.answered
+      when: MATCH (d:Document) RETURN d LIMIT 1
       timeout: 3m
       meanwhile: Searching your own material and composing an answer.
       else: >-
-        No answer came back in three minutes. That usually means no documents are indexed yet, or
-        the model provider key has not been set — both are on the Documents and Machine panels.
+        No answer came back in three minutes. That usually means the model provider key has not
+        been set — it is on the Machine panel.
 
     - say: |
         That answer was assembled from your own material, and every claim in it can be traced back
         to the chunk it came from. Ask it something else whenever you like.
+      when: MATCH (d:Document) RETURN d LIMIT 1
+
+    # The other leg: nothing is indexed, so Documents has nothing to answer from. The realms are
+    # the data here, and the way to ask them is chat — which routes a question to the saved view
+    # that answers it, or writes a query when none does.
+    - open: panel.documents
+      doneWhen: MATCH (d:Document) RETURN d LIMIT 1
+      say: |
+        **Documents** is the other half — anything you index here is converted, chunked and
+        embedded locally. Nothing is indexed yet, so there is nothing for this panel to answer
+        from; drop a file here whenever you like. Your realms are the data on this appliance, and
+        they answer through chat.
+
+    - open: panel.chat
+      doneWhen: MATCH (d:Document) RETURN d LIMIT 1
+      say: |
+        Ask your question here. Chat checks the saved views your realms ship — each one answers a
+        question its author wrote down — and runs the one that fits, or writes a query when none
+        does. The sources it used appear under the answer.
 
     - open: panel.query
       by: user
