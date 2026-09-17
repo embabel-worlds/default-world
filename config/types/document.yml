@@ -61,6 +61,14 @@
     uri: "The document's URI/source location."
     ingestionTimestamp: "When the document was ingested (ISO-8601) — filter recency with this, e.g. WHERE d.ingestionTimestamp >= date('…')."
     tags: "Caller-assigned tags — for a document indexed from a shared folder, the folder's name is a tag by default. A LIST: filter with membership, WHERE 'papers' IN d.tags — NEVER d.tags CONTAINS '…' (substring over a list is a type error). Absent on untagged documents."
+    # ── The document's OWN dates and origin, as distinct from when WE received it ──
+    # These answer questions the text cannot: which edition is this, what period does it
+    # cover, which file did it come from. Each is ABSENT on most documents, so a filter on
+    # one SILENTLY EXCLUDES every document that lacks it — say so in the answer, or prefer
+    # ingestionTimestamp when the user just means "recent".
+    as_of_date: "The date the document's CONTENT reports as at / up to (ISO-8601), read from the document itself — NOT when it was ingested. Use for 'as at', 'as of', 'for the period ending'. ABSENT unless the document states a reporting period on its cover, which most documents do not: a filter on this drops every document without one, so never use it to mean 'recent' (that is ingestionTimestamp)."
+    document_period: "The reporting period the document declares in its own words, e.g. 'half year ended 31 December 2025' or 'as at 30 June 2024'. Free text, so match loosely (CONTAINS 'quarter'), never for equality. ABSENT unless the document declares one."
+    source_name: "The original filename the document was ingested from, e.g. 'CBA-2026-Half-Year-Pillar-3.pdf'. Answers 'which file is this in' and distinguishes editions whose TEXT is nearly identical (a 2024 compilation vs the original print). ABSENT when the source had no filename (a pasted URL)."
     # Per-match data (the matching excerpt/score/mode/rank) is NOT a node property — it lives on the
     # RELEVANT_TO edge (r.snippet / r.score / r.mode / r.rank), because a document reached by several anchors
     # dedups to ONE node and a node property would be clobbered. Read the excerpt as r.snippet.

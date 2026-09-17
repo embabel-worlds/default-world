@@ -11,7 +11,9 @@
   edgeType: HAS_SUMMARY
   collect:
     targetLabel: Chunk
-    via: PART_OF
+    # Chunks nest under Sections in structured (docling) documents — traverse the containment
+    # path however deep: (Chunk)-[:PART_OF|HAS_PARENT*]->(Document).
+    via: PART_OF|HAS_PARENT*
     incoming: true
     anchorLabel: Document
     anchorKeyProperty: uri
