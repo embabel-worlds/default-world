@@ -16,8 +16,16 @@
 # entry wins the shared `brave` gateway namespace. The specs are kept
 # identical — if you change brave.yaml here, change realm-research's copy
 # too (and vice versa).
+#
+# `capability-tags` declares what this API IS FOR, so code that has to
+# pick a search tool without an LLM in the loop — person research, for
+# one — finds it by capability rather than by the provider's name. Any
+# entry declaring `web-search` is discovered the same way, so replacing
+# Brave with another provider keeps web research working. This is NOT
+# `tags`, which filters which OPERATIONS of a spec become tools.
 - url: brave.yaml
   name: brave
   type: openapi
   auth: api-key
   token-env: BRAVE_API_KEY
+  capability-tags: [web-search]
