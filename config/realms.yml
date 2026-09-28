@@ -2,10 +2,10 @@
 # Each entry is a git repo to clone into realms/{name}.
 - name: research
   repo: https://github.com/embabel-worlds/realm-research.git
-  version: "main"
+  version: "v0.3.0"
 - name: github
   repo: https://github.com/embabel-worlds/realm-github.git
-  version: "main"
+  version: "v0.5.0"
 - name: spec
   repo: https://github.com/embabel-worlds/realm-spec.git
-  version: "main"
+  version: "v0.2.0"

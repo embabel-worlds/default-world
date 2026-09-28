@@ -1,8 +1,8 @@
 - type: github
-  url: https://github.com/Orchestra-Research/AI-Research-SKILLs/blob/main/21-research-ideation/creative-thinking-for-research
+  url: https://github.com/Orchestra-Research/AI-Research-SKILLs/blob/773a52944ba4747a18bd4ae9ade53fff041adcbc/21-research-ideation/creative-thinking-for-research
 
 # The REST client-authoring discipline, served over the door so any connected
 # coding agent can activate_skill it — sourced from the appliance repo directly
 # rather than copied, so a fix there reaches fresh worlds on the next refresh.
 - type: github
-  url: https://github.com/embabel-worlds/appliance/tree/main/skills/embabel-client
+  url: https://github.com/embabel-worlds/appliance/tree/0c7de7975324ebeefa45dc5484bc0135f5eed082/skills/embabel-client
