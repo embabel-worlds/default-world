@@ -10,6 +10,7 @@
 # one only to fix something whose audience is genuinely new worlds alone.
 
 - id: take-the-tour
+  group: Get set up
   order: 5
   surface: all
   category: setup

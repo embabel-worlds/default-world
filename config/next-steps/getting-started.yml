@@ -16,11 +16,17 @@
 # `order` mean exactly what that client decides they mean — and a new field costs an edit
 # to this file, not a server release.
 #
+# `group` puts small steps on one line: steps naming the same group are drawn as a single
+# row, at the place of the first of them, that opens to show each with its own tick. Use
+# it for things that take a couple of minutes each. Every step is still its own question
+# to the graph; a client that has never heard of `group` shows them separately.
+#
 # A world overrides any of these with a file of the same name in its own
 # config/next-steps/, and a realm ships its own in `next-steps/` — those arrive and leave
 # with the realm, which is how a realm asks for the setup only it knows it needs.
 
 - id: coding-agent
+  group: Get set up
   order: 10
   surface: all
   category: setup
@@ -42,6 +48,7 @@
     RETURN d
 
 - id: unlock-integration
+  group: Get set up
   order: 20
   surface: all
   category: capability
