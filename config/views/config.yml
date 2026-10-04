@@ -20,10 +20,12 @@
   cypher: |
     MATCH (me:AssistantUser)-[:HAS_CONFIG]->(v:ConfigView) RETURN v
 
+# Realms are not Config*: the (:Realm) catalogue lists every realm this world can name, installed or
+# on offer, so the installed ones are a WHERE on it.
 - name: my_realms
-  description: "Realms installed in this world — a subset of ConfigRealm. Answers 'what capabilities does it have?'"
+  description: "Realms installed in this world — the installed rows of the Realm catalogue. Answers 'what capabilities does it have?'"
   cypher: |
-    MATCH (me:AssistantUser)-[:HAS_CONFIG]->(r:ConfigRealm) RETURN r
+    MATCH (r:Realm) WHERE r.installed RETURN r
 
 - name: my_skills
   description: "Skills available in this world — a subset of ConfigSkill."
@@ -47,7 +49,7 @@
 - name: realms_with_problems
   description: "Installed realms that did not load cleanly — start here when a realm is present but does nothing."
   cypher: |
-    MATCH (me:AssistantUser)-[:HAS_CONFIG]->(r:ConfigRealm) WHERE r.problems > 0 RETURN r
+    MATCH (r:Realm) WHERE r.installed AND r.problems > 0 RETURN r
 
 - name: skipped_apis
   description: "APIs a realm declared that were skipped at load, and why — usually a missing credential."
