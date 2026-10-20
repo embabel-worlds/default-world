@@ -22,10 +22,15 @@
 #   MATCH (p:Person {name:'Ada Lovelace'})-[:REMEMBERED_IN]->(m:Memory) RETURN m.text
 #
 # Curation: reads are ACTIVE memories only. A `status` constraint on the memory node relaxes that to
-# the status it names; a CONTRADICTED (known-false) memory never surfaces, even when asked for.
+# the status it names; a CONTRADICTED (known-false) memory never surfaces, even when asked for. The
+# `lifecycle:` below is what makes the scope rewriter hold EVERY memory label to that — this one and
+# each child under it, whichever system fetched the node — the way it holds a DICE :Proposition.
 - name: Memory
   visibility: internal
   userAnchor: false
+  lifecycle:
+    active: [ACTIVE]
+    never: [CONTRADICTED]
   description: "A fact the assistant remembers about you, from whichever memory system holds it — ALREADY yours, implicitly scoped to you, so \"what do you remember / know about X\" needs NO ownership edge. Reach it from a free-text Concept via RELEVANT_TO (aboutness; via:'keyword' for exact mentions), or from a known Person/Organization via REMEMBERED_IN (facts that mention that entity). Name :Memory to read every memory system, or a child label (:DiceMemory) for one. Per-match data is on the EDGE: r.score, r.mode, r.rank, r.snippet, r.matchedTerms — ORDER BY r.rank. A memory's content is m.text; NEVER summarize() over r.snippet."
   properties:
     id:
