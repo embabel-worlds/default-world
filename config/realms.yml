@@ -20,3 +20,17 @@
 - name: markdown-memory
   repo: https://github.com/embabel-worlds/realm-markdown-memory.git
   version: "main"
+# A self-hosted Graphiti server (Zep's engine) under the same Memory label: facts with the window
+# in which they held. Needs a Graphiti server at the URL in the realm's vendored OpenAPI spec.
+- name: graphiti-memory
+  repo: https://github.com/embabel-worlds/realm-graphiti-memory.git
+  version: "main"
+# Zep Cloud under the same Memory label: the same facts, hosted, keyed (ZEP_API_KEY) and scored.
+- name: zep-memory
+  repo: https://github.com/embabel-worlds/realm-zep-memory.git
+  version: "main"
+# The MCP memory server's knowledge graph under the same Memory label: one memory per entity in
+# its memory.jsonl, read live from the world's data/memory/mcp/.
+- name: mcp-memory
+  repo: https://github.com/embabel-worlds/realm-mcp-memory.git
+  version: "main"
