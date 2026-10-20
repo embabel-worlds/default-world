@@ -9,3 +9,9 @@
 - name: spec
   repo: https://github.com/embabel-worlds/realm-spec.git
   version: "main"
+# A second memory system under the shared Memory label (types/memory.yml): facts held in an
+# Omnigraph graph, recalled through the graph's own BM25 stored query. Needs an Omnigraph server
+# at the URL in the realm's vendored OpenAPI spec; without one its edge answers empty, reported.
+- name: omnigraph-memory
+  repo: https://github.com/embabel-worlds/realm-omnigraph-memory.git
+  version: "main"
