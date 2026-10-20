@@ -1,0 +1,111 @@
+# MEMORY as a relevance target — what the assistant REMEMBERS, reachable in a query the same way
+# documents and email threads are. Materialized transiently when a query traverses to it, then
+# rolled back; nothing persists. See specs/VIRTUAL_CYPHER.md (memory as a relevance source).
+#
+# `Memory` is the PARENT label every memory system shares. Each system is a child type carrying it
+# (LABELS_AND_COMPOSITION §2: ancestors are physically present), so a query may name the parent and
+# be answered by every child that has a join, or name one child to read that system alone:
+#
+#   MATCH (c:Concept {value:'coffee'})-[r:RELEVANT_TO]->(m:Memory)         -- every memory system
+#   MATCH (c:Concept {value:'coffee'})-[r:RELEVANT_TO]->(m:DiceMemory)     -- the assistant's own
+#   RETURN m.text, m.confidence, r.score, r.mode ORDER BY r.rank
+#
+# `DiceMemory` is the assistant's own semantic memory (DICE propositions). A realm that brings
+# another memory system declares its own child — `parents: [Memory]` — over its own producer, and
+# carries the same `source` property so a reader can tell the systems apart in one result.
+#
+# Three ways to reach a memory, selected at the edge exactly as a Document is:
+#   SEMANTIC (default / via:'vector')  — "what do you remember ABOUT X" (hybrid vector + keyword, fused)
+#   LEXICAL  (via:'keyword')           — "memories that MENTION X" (every term present, or nothing)
+#   AGENTIC  (via:'agentic-rag')       — judged against an `intent` brief; falls back to relevance
+# and from a KNOWN ENTITY, by fact rather than similarity:
+#   MATCH (p:Person {name:'Ada Lovelace'})-[:REMEMBERED_IN]->(m:Memory) RETURN m.text
+#
+# Curation: reads are ACTIVE memories only. A `status` constraint on the memory node relaxes that to
+# the status it names; a CONTRADICTED (known-false) memory never surfaces, even when asked for.
+- name: Memory
+  visibility: internal
+  userAnchor: false
+  description: "A fact the assistant remembers about you, from whichever memory system holds it — ALREADY yours, implicitly scoped to you, so \"what do you remember / know about X\" needs NO ownership edge. Reach it from a free-text Concept via RELEVANT_TO (aboutness; via:'keyword' for exact mentions), or from a known Person/Organization via REMEMBERED_IN (facts that mention that entity). Name :Memory to read every memory system, or a child label (:DiceMemory) for one. Per-match data is on the EDGE: r.score, r.mode, r.rank, r.snippet, r.matchedTerms — ORDER BY r.rank. A memory's content is m.text; NEVER summarize() over r.snippet."
+  properties:
+    id:
+      description: "The memory's id in its own system — the node identity."
+      metadata:
+        identity: "true"
+    text: "The remembered fact, in words."
+    confidence: "How sure the system is of it, 0..1."
+    status: "Curation state: ACTIVE (current), SUPERSEDED or STALE (audits only — pin it explicitly), PROMOTED. CONTRADICTED is known-false and is never returned."
+    created: "When it was first learned (ISO-8601)."
+    revised: "When its content last changed (ISO-8601)."
+    source: "Which memory system holds it, e.g. 'dice'."
+    mentions: "The names mentioned in the fact — a LIST; filter with membership, WHERE 'Ada' IN m.mentions."
+    entityIds: "Resolved ids of the known entities the fact mentions — a LIST."
+    validFrom: "When the fact became true, when the system knows (ISO-8601)."
+    validTo: "When it stopped being true, when the system knows (ISO-8601)."
+
+- name: DiceMemory
+  parents: [Memory]
+  visibility: internal
+  userAnchor: false
+  description: "The assistant's OWN semantic memory — the facts it has learned about you from conversation and documents (DICE propositions). One of the memory systems behind :Memory; reach it the same way, or name it directly to read only this system."
+  virtualJoins:
+    # Default / semantic. A plain (no-`via`) edge selects THIS join. Hybrid vector + keyword, fused.
+    - anchorLabel: Concept
+      relationship: RELEVANT_TO
+      via: vector
+      keyField: value          # the free-text topic is embedded for similarity
+      recordKeyField: matchedFor
+      producer: memoryVector
+      description: "SEMANTIC relevance of a remembered fact to a FREE-TEXT topic — \"what do you remember about X\". The Concept is seeded from a query literal, e.g. (:Concept {value:'coffee'})-[:RELEVANT_TO]->(:Memory). Aboutness, not exact mention. Per-match data on the EDGE: r.score, r.mode ('fused', or 'keyword' when only exact terms matched), r.rank, r.snippet, r.matchedTerms."
+    # Lexical. `via:'keyword'` selects THIS join — every term present, the honest fit for \"MENTIONS X\".
+    - anchorLabel: Concept
+      relationship: RELEVANT_TO
+      via: keyword
+      keyField: value
+      recordKeyField: matchedFor
+      producer: memoryKeyword
+      description: "LEXICAL relevance — memories that MENTION the exact terms. Pin via:'keyword' on the edge, e.g. (:Concept {value:'Canva'})-[:RELEVANT_TO {via:'keyword'}]->(:Memory). A miss is an honest empty. Per-match data on the EDGE: r.score, r.snippet, r.mode, r.rank, r.matchedTerms."
+    # Agentic. `via:'agentic-rag'` with an `intent` brief; memory has no judging loop of its own yet, so
+    # this answers with plain relevance and reports the mode that ran.
+    - anchorLabel: Concept
+      relationship: RELEVANT_TO
+      via: agentic-rag
+      keyField: value
+      recordKeyField: matchedFor
+      producer: memoryAgentic
+      description: "AGENTIC relevance over memory — same edge shape as a Document's, e.g. (:Concept {value:'Acme'})-[:RELEVANT_TO {via:'agentic-rag', intent:'renewal risk'}]->(:Memory). Answers with relevance today; r.mode reports what ran."
+    # FACTUAL: memories that mention a KNOWN entity, by its resolved id — never by name similarity.
+    - anchorLabel: Person
+      relationship: REMEMBERED_IN
+      keyField: id             # the person's identity — a memory mentions entities by resolved id
+      recordKeyField: matchedFor
+      producer: memoryAbout
+      description: "FACTUAL: the memories that MENTION this person — matched by the person's id against the entities each fact resolved to, never by name similarity. Use for \"what do you know / remember about <person>\". Anchors on a bound :Person."
+    - anchorLabel: Organization
+      relationship: REMEMBERED_IN
+      keyField: id
+      recordKeyField: matchedFor
+      producer: memoryAbout
+      description: "FACTUAL: the memories that MENTION this organization, matched by its id against the entities each fact resolved to. Use for \"what do you know about <company>\"."
+  examples:
+    - q: "what do you remember about my coffee habits"
+      cypher: |
+        MATCH (:Concept {value:'coffee habits'})-[r:RELEVANT_TO]->(m:Memory)
+        RETURN m.text, m.confidence, r.score, r.mode ORDER BY r.rank LIMIT 10
+    - q: "which memories mention Canva"
+      cypher: |
+        MATCH (:Concept {value:'Canva'})-[r:RELEVANT_TO {via:'keyword'}]->(m:Memory)
+        RETURN m.text, m.created ORDER BY r.rank
+    - q: "what do you know about Ada Lovelace"
+      cypher: |
+        MATCH (p:Person) WHERE toLower(p.name) CONTAINS 'ada' AND toLower(p.name) CONTAINS 'lovelace'
+        MATCH (p)-[:REMEMBERED_IN]->(m:Memory)
+        RETURN m.text, m.confidence ORDER BY m.confidence DESC
+  properties:
+    id:
+      description: "The proposition id — the node identity."
+      metadata:
+        identity: "true"
+    importance: "How much the fact matters, 0..1."
+    level: "Abstraction level: 0 is a directly learned fact; higher levels are generalisations over lower ones."
+    pinned: "Whether the user pinned it to resist decay."

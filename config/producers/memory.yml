@@ -1,0 +1,38 @@
+# Relevance producers backing the on-demand joins onto MEMORY (types/memory.yml). All four run through
+# the in-tree memory source (index: memory), which searches the acting user's DICE propositions in their
+# current memory context — per-user scoped at the source, because a vector search bypasses the Cypher
+# scope rewriter — and returns ACTIVE facts unless the query pins a status on the memory node. The
+# relevance score lands on the edge (query it as r.score); k is memories, deduped.
+#
+# Three relevance kinds over the SAME index — the query's `via` selects between them at the edge —
+# plus the factual sibling keyed on a known entity's id:
+#   memoryVector  (kind: vector)      — SEMANTIC aboutness (hybrid vector + keyword, fused).  via:'vector' / default
+#   memoryKeyword (kind: keyword)     — LEXICAL, every term present.                          via:'keyword'
+#   memoryAgentic (kind: agentic-rag) — judged against an `intent` brief; relevance today.     via:'agentic-rag'
+#   memoryAbout   (kind: participant) — FACTUAL: memories mentioning the anchor entity, by id.  REMEMBERED_IN
+- name: memoryVector
+  kind: vector
+  index: memory
+  k: 8
+  minScore: 0.0
+
+- name: memoryKeyword
+  kind: keyword
+  index: memory
+  k: 8
+  minScore: 0.0
+
+- name: memoryAgentic
+  kind: agentic-rag
+  index: memory
+  k: 8
+  minScore: 0.0
+
+# `memoryAbout` is the FACTUAL sibling: memories whose resolved entity mentions include the anchor's id.
+# A person's NAME embedded for similarity retrieves whatever prose sits near the name, which fabricates
+# "memories about X" from a namesake; the id cannot. The join keys on the anchor's identity property.
+- name: memoryAbout
+  kind: participant
+  index: memory
+  k: 25
+  identityField: entityId
