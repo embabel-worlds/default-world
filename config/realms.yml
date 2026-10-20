@@ -15,3 +15,8 @@
 - name: omnigraph-memory
   repo: https://github.com/embabel-worlds/realm-omnigraph-memory.git
   version: "main"
+# Markdown memory under the same Memory label: Claude Code's memory directory, OpenClaw's MEMORY.md
+# and daily logs, a Cline/Roo memory bank, plain notes — read live from the world's data/memory/.
+- name: markdown-memory
+  repo: https://github.com/embabel-worlds/realm-markdown-memory.git
+  version: "main"
