@@ -25,10 +25,9 @@
 - name: graphiti-memory
   repo: https://github.com/embabel-worlds/realm-graphiti-memory.git
   version: "main"
-# Zep Cloud under the same Memory label: the same facts, hosted, keyed (ZEP_API_KEY) and scored.
-- name: zep-memory
-  repo: https://github.com/embabel-worlds/realm-zep-memory.git
-  version: "main"
+# Zep Cloud under the same Memory label is OPT-IN: it needs a ZEP_API_KEY and a Zep user id, and
+# installed without them it warns on every :Memory query. Install it in a world that has them:
+#   https://github.com/embabel-worlds/realm-zep-memory
 # The MCP memory server's knowledge graph under the same Memory label: one memory per entity in
 # its memory.jsonl, read live from the world's data/memory/mcp/.
 - name: mcp-memory
