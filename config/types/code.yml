@@ -132,3 +132,45 @@
     arguments: { cardinality: LIST, description: "Each argument as written." }
     argumentTypes: { cardinality: LIST, description: "Each argument's static type, when the file shows it; empty when it does not." }
     enclosing: "Name of the member the call is in."
+
+- name: SourceLocal
+  description: "A local variable in a source file's syntax tree — a plain local, a loop variable, a resource, a pattern binding — with its type as written and what it is given. Name a language's child (e.g. JavaLocal) to read one language."
+  properties:
+    id: { identity: true, description: "The file's id, `#local:`, the name, line and column." }
+    sourceId: "Id of the Source it is in."
+    kind: "local, for, foreach, resource, pattern."
+    name: "Variable name."
+    line: { type: int, description: "Line of the declaration." }
+    declaredType: "The type as written; the language's inference keyword (`var`) when the type is inferred."
+    initializer: "What it is given, as written; empty when nothing is."
+    initializerType: "Runtime name of the initializer's static type, when the file shows it."
+    enclosing: "Name of the member it is declared in."
+    text: "The declaration's numbered lines."
+
+- name: StackFrame
+  description: "One frame of a stack trace: the method running, and the file and line it names. Carries the compiled-code keys when an artifact the world holds compiled its type, so it reaches the type, the method's declaration and the source lines. Name a language's child (e.g. JavaStackFrame) to read one language."
+  properties:
+    id: { identity: true, description: "The trace's id, `#`, the throwable's index and the frame's." }
+    traceId: "Id of the trace: the same text, the same id."
+    exception: "Runtime name of the throwable whose frames these are."
+    frame: { type: int, description: "Position in its throwable's frames, 0 at the top." }
+    className: "Runtime name of the frame's type."
+    method: "Method name, as the runtime names it."
+    file: "Source file the frame names; empty when it names none."
+    line: { type: int, description: "Line the frame names; empty when it names none." }
+    inArtifact: { type: boolean, description: "An artifact the world holds compiled the frame's type." }
+    sourceKey: "Key of the source file, when an artifact compiled the type."
+    spanKey: "Key of the frame's source line; what a source realm joins on."
+    text: "The frame as printed."
+
+- name: ThrownException
+  description: "One throwable in a stack trace — the one thrown, a cause, or one it suppressed — with its message and where its frames first reach code an artifact the world holds compiled. Name a language's child (e.g. JavaThrowable) to read one language."
+  properties:
+    id: { identity: true, description: "The trace's id, `#`, its index in the trace." }
+    traceId: "Id of the trace."
+    index: { type: int, description: "Position in the trace: 0 is the one thrown." }
+    relation: "thrown, cause or suppressed."
+    exception: "Runtime name of the throwable's type."
+    message: "Its message."
+    isRootCause: { type: boolean, description: "The last cause in the chain." }
+    spanKey: "Key of the source line of its first frame in held code."
