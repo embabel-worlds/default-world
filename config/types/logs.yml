@@ -1,0 +1,19 @@
+# LOGS — what every log realm's events carry, whatever reads them: a file in the world, a log index,
+# a platform's log API. A realm declares the joins; this declares the properties a query may count
+# on under these names.
+
+- name: LogEvent
+  description: "One event a program logged — its time, level, logger and message, and when it logged a failure, the exception and causes. One row per event however many lines it took."
+  properties:
+    id: { identity: true, description: "Unique within the log it was read from." }
+    timestamp: "When it was logged, as the log wrote it."
+    level: "The level as the log wrote it."
+    severity: "The level on one scale: TRACE, DEBUG, INFO, WARN, ERROR, FATAL."
+    thread: "The thread that logged it."
+    logger: "The logger (usually a class or component) that logged it."
+    message: "The message."
+    content: "The whole event as logged, stack trace included."
+    hasTrace: { type: boolean, description: "It carries a stack trace." }
+    exception: "Runtime name of the exception it logged."
+    rootCause: "Runtime name of the last cause in the chain."
+    fingerprint: "Same exception, same cause, same frames: the same fingerprint, so a failure can be counted."
