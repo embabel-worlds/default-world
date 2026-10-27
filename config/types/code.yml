@@ -144,9 +144,9 @@
     id: { identity: true, description: "The file's id, `#import@`, the line and column." }
     sourceId: "Id of the Source it is in."
     line: { type: int, description: "Line of the import." }
-    module: "The module, package or file imported from, as written: `java.util`, `@angular/core`, `./order`, `os.path`."
+    imported: "The module, package or file imported from, as written: `java.util`, `@angular/core`, `./order`, `os.path`. (Not `module`, which a build's rows already use for the module a file is in.)"
     names: { cardinality: LIST, description: "The names brought in, as written; empty when the whole module is (`import os`, `import * as fs`)." }
-    alias: "The local name the module is bound to, when the import gives one (`import numpy as np`)."
+    alias: "The local name what is imported is bound to, when the import gives one (`import numpy as np`)."
     isStatic: { type: boolean, description: "A static import, or the language's equivalent." }
 
 - name: SourceLocal
