@@ -121,6 +121,7 @@
     text: "The declaration's numbered lines (not for a whole type)."
     signature: "As source writes it."
     javadoc: "The documentation comment's description, when there is one: a Javadoc, a JSDoc, a docstring."
+    annotations: { cardinality: LIST, description: "Its annotations, decorators or attributes, as written: `@GetMapping(\"/items/{id}\")`, `@router.get(\"/{id}\")`, `[HttpGet(\"{id}\")]`, `#[get(\"/items/{id}\")]`." }
 
 - name: CallSite
   description: "One call in source, from a file's syntax tree: what it is called on and what is passed, with each argument's static type where the file alone shows it. Name a language's child (e.g. JavaCallSite) to read one language."
