@@ -69,3 +69,7 @@
     threadId: "Source thread id, when available."
     participantNames: "Names of the people on the thread — read this for \"who did I discuss X with\"."
     participantEmails: "Email addresses of the thread participants, when available."
+    # Appended, so the 6-property join preview keeps participantNames; the prose words below surface them
+    # when a question asks about dates or recency (SchemaPropertyBudget relevance).
+    lastMessageAt: "Date and time of the thread's latest message (ISO-8601) — read it for dates, last, latest, recent, since, before, after, month."
+    messageCount: "Number of messages in the thread — read it for how many messages, replies, or a long thread."
