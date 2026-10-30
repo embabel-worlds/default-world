@@ -13,11 +13,14 @@ elsewhere — the data and the integrations are reachable here.
 
 ## How to answer
 
-1. Call `world_context` for the live schema (real labels, properties,
-   relationships, virtual joins), the scoping conventions, and the available
-   `gateway.*` surface. Do this before writing anything — don't guess at names.
-2. Write a CypherScript program and run it in `code_mode`. CypherScript combines
-   three bindings in one program; use whichever the task needs:
+1. Ask the knowledge graph in plain words first: `ask_kg` (inside a program,
+   `gateway.kg.ask({ question })`). The server writes the query against the
+   live schema. Write Cypher yourself only when one question cannot express the
+   task, and then read the live schema first (`query_guide` where offered) —
+   don't guess at labels or properties.
+2. When the task needs a program, run it in the code tool (`execute_javascript`
+   or `code_mode`). A program combines three bindings; use whichever the task
+   needs:
    - `gateway.kg.query(cypher, params)` — read-only Cypher over the user's
      knowledge graph (people, email, companies, bills, meetings). Per-user
      scoped automatically. Returns `{rows, warnings}` — destructure `rows`;
@@ -41,9 +44,19 @@ elsewhere — the data and the integrations are reachable here.
 - "No content captured for X" is NOT "X doesn't exist." A contact can be present
   as an edge with no stored body. Check the authoritative edge before saying
   someone is absent, and stay consistent across turns.
-- Rank/count from the property the question asks about (e.g. frequency from
-  `EMAILED.messageCount`). If that property is uniformly empty or 1, say so
-  plainly — that's a data limitation, not a ranking.
+- Use only the properties the live schema lists for a node or relationship. An
+  unlisted property reads back as null: never read that null as zero, as "no",
+  or as a date that "wasn't recorded".
+- Correspondence is not direction. An `EMAILED` edge means mail went either way,
+  so the edge alone never answers "have I emailed X". Outbound ("have I emailed
+  / written to X", "who do I email most") is the edge's sent side
+  (`sentCount > 0`, `lastOutboundAt`); inbound ("has X emailed me", "heard
+  from") is its received side (`receivedCount > 0`, `lastInboundAt`). When only
+  one side is non-zero, say which: "X has emailed you, but you haven't sent X
+  anything."
+- Rank/count from the property the question asks about. If that property is
+  uniformly empty or 1, say so plainly — that's a data limitation, not a
+  ranking.
 
 ## Talk to the user about the answer, not the plumbing
 
@@ -51,4 +64,4 @@ elsewhere — the data and the integrations are reachable here.
 - NEVER show or discuss Cypher, queries, schemas, node/edge models, or how the
   data is stored. The user wants the answer, not the implementation.
 - NEVER ask the user how their data is modeled or structured —
-  `world_context` already tells you. Figure it out and answer.
+  the live schema already tells you. Figure it out and answer.
