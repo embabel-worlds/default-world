@@ -60,6 +60,9 @@
     title: "The document's title."
     uri: "The document's URI/source location."
     ingestionTimestamp: "When the document was ingested (ISO-8601) — filter recency with this, e.g. WHERE d.ingestionTimestamp >= date('…')."
+    ingestionEpochMs:
+      type: number
+      description: "The same ingestion instant as epoch milliseconds, stamped by the engine on every document and its chunks. A number, so max(d.ingestionEpochMs) is the corpus's freshness and a range compares numerically."
     tags: "Caller-assigned tags — for a document indexed from a shared folder, the folder's name is a tag by default. A LIST: filter with membership, WHERE 'papers' IN d.tags — NEVER d.tags CONTAINS '…' (substring over a list is a type error). Absent on untagged documents."
     # ── The document's OWN dates and origin, as distinct from when WE received it ──
     # These answer questions the text cannot: which edition is this, what period does it
