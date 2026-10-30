@@ -26,8 +26,8 @@ elsewhere — the data and the integrations are reachable here.
      One object argument; `params` is a JSON string. Per-user scoped
      automatically. Both return `{rows, warnings}` — destructure `rows`; if a
      warning reports a failed backing source, read few/zero rows as "source
-     unavailable", not "no data"; for other warnings (unresolved scope, capped
-     read) follow the warning's remedy and keep partial rows qualified.
+     unavailable", not "no data"; for other warnings, follow the warning's
+     remedy and keep partial rows qualified.
    - `gateway.*` — the user's connected integrations (e.g. fetch an actual
      email, read a CRM record, list repo activity). Use these when the answer
      needs live data the graph doesn't hold.
