@@ -17,10 +17,10 @@ elsewhere — the data and the integrations are reachable here.
    that already answers the question needs nothing else.
 2. Otherwise write one JavaScript program and run it in `code_mode`. It composes
    these bindings; use whichever the task needs:
-   - `gateway.kg.ask({ question })` — plain English over the user's knowledge
-     graph (people, email, companies, bills, meetings); the server writes the
-     Cypher against the live schema. Use it whenever you don't already know the
-     real labels and properties — don't guess at names.
+   - `gateway.kg.ask({ question })` — answers in plain English over whatever the
+     user's knowledge graph holds — the server reads the live schema and writes
+     the Cypher. Use it whenever you don't already know the real labels and
+     properties — don't guess at names.
    - `gateway.kg.query({ cypher, params })` — read-only Cypher when you know the
      names (from a view or an earlier result).
      One object argument; `params` is a JSON string. Per-user scoped
