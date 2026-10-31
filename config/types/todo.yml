@@ -1,9 +1,55 @@
+# TODO — the parent label every system that holds tasks shares, the way `Memory` is shared by every
+# memory system. The world's own list is the rows stored under this label (`create_entry` / the todo
+# apps); a realm that brings another system declares its own child — `GitHubIssue` with
+# `parents: [Todo]` (realm-github) is the first — over its own producer. Ancestors are physically
+# present (LABELS_AND_COMPOSITION §2), so a query may name the parent and be answered by every system
+# that has a join, or name a child to read one system:
+#
+#   MATCH (me:AssistantUser)<-[:OWNED_BY]-(t:Todo)                    -- the world's own list (stored)
+#   MATCH (g:GitHubIdentity)-[:ASSIGNED]->(t:Todo)                     -- issues assigned to me, AS todos
+#   MATCH (g:GitHubIdentity)-[:ASSIGNED]->(i:GitHubIssue)              -- the same rows, GitHub's own shape
+#
+# This declares the CONTRACT: the properties every system's rows carry under these names. A child
+# adds its own (an issue's `number`, `repo`, `labels`) and may not drop these; it maps onto them in
+# its producer's `compute:` block (`done` from `state = 'closed'`, `url` from `html_url`), the way
+# realm-zep-memory maps onto Memory's. A child must restate `visibility`, `userAnchor`, `description`
+# and its own identity — those are not inherited (config/types/README.md, "Shared labels").
+#
+# A child's rows are fetched when a query reaches them through its join; nothing here reaches them.
+# So a bare `MATCH (t:Todo)` reads the STORED list only — the virtual children need their anchor
+# (`(g:GitHubIdentity)-[:ASSIGNED]->`), and with children declared and no stored row the engine
+# refuses the bare form with a FIX naming the anchor (VirtualQueryPlanner.unreachableParentError).
+#
+# NO LIFECYCLE, by decision. `done` is the one completion flag — a closed issue is still a todo you can
+# ask about — so there is no `status` and the scope rewriter holds no todo label to one. `done` is
+# left exactly as it was declared (no `type:`), because adding a coercion to a stored property changes
+# what the next create writes; stored rows hold it as the caller sent it, so a reader that must be
+# sure compares `toString(t.done)` (config/views/ladder.yml, `my_todos`).
+#
+# THE LADDER for todos is Mirror and Compare only: install realm-github and its issues answer to
+# :Todo; `my_todos` (config/views/ladder.yml) reads the stored list and realm-github's view reads
+# its own, and the console lays them side by side. Promote and Retire wait for a native todo write
+# tool — there is none today (SchemaSegmenter is the engine's only mention of Todo), so there is
+# nothing for a promoted issue to be copied INTO.
 - name: Todo
-  description: A task to complete — supports due dates, priorities, and tags
+  description: "Something you mean to do, from whichever system holds it — the world's own list, or a child (GitHubIssue, …). Name :Todo to read every system, a child to read one. `done` is the one completion flag; `source` says which system; `url` opens it there. The world's own rows reach you through (me:AssistantUser)<-[:OWNED_BY]-(t:Todo); a child's rows through that child's own anchor, e.g. (g:GitHubIdentity)-[:ASSIGNED]->(t:Todo)."
   properties:
+    # NOT `identity: true`, and deliberately. The loader would accept it — IdPropertyRule exempts a type
+    # whose identity IS `id`, and WorldTypeLoader records the identity property without reading the
+    # store — but the repository treats an identity key as REQUIRED on every create
+    # (EntryShape.missingRequired: "a keyed type with no key can't be deduped, so it must be present"),
+    # and RepositoryStore.writeOne names Todo as the type that keeps the random-id behaviour. Flagging
+    # it would refuse every "add a todo" that does not invent an id first. A stored row already carries
+    # `id` as its node key, so the contract holds without the flag; a child declares its own identity
+    # anyway (identity is never inherited). Revisit when a native todo write tool mints ids.
+    id: { description: "The task's id in its own system — the node's own key for the world's list, the system's id for a child." }
     title: Title of the task
     due: Due date (e.g., 2026-04-10, tomorrow, next Friday)
     priority: Priority level — LOW, MEDIUM, or HIGH
     done: Whether the task is complete (true/false)
     tags: Comma-separated tags (e.g., work, personal, urgent)
     notes: Additional notes or context
+    source: "Which system holds it, e.g. 'me' for the world's own list, 'github' for an issue. Null on a stored row written before this contract — read it as 'me'."
+    url: "Where to open it in its own system. Null for the world's own list, which has no page of its own."
+    created: "When it was raised (ISO-8601)."
+    updated: "When it last changed (ISO-8601)."
