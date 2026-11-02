@@ -3,15 +3,61 @@
 #
 # A view here must be a SUBSET view: `MATCH … [WHERE …] RETURN <singleNodeVar>` — its rows ARE nodes of an
 # existing (real or virtual) type, so it preserves identity and composes:
-#   MATCH (d:my_documents) WHERE 'contracts' IN d.tags RETURN d.title
+#   MATCH (p:my_correspondents)-[:WORKS_FOR]->(o:Organization) RETURN o.name
 # expands to
-#   CALL { MATCH (me:AssistantUser)<-[:OWNED_BY]-(d:Document) RETURN d AS d } MATCH (d) WHERE 'contracts' IN d.tags RETURN d.title
-#
-# A view that ships with every world reads only what every world has. Views over correspondence (the
-# EMAILED edge) and over the assistant's own memory (:Proposition) ship with the inbox realm,
-# embabel-worlds/realm-email, because a world without mail has neither and would list them only to
-# refuse them.
+#   CALL { MATCH (me:AssistantUser)-[:EMAILED]->(p:Person) RETURN p AS p } MATCH (p)-[:WORKS_FOR]->(o) RETURN o.name
+- name: my_correspondents
+  description: "People you have emailed — a subset of Person."
+  cypher: |
+    MATCH (me:AssistantUser)-[:EMAILED]->(p:Person) RETURN p
+
 - name: my_documents
   description: "Documents you own — a subset of Document."
   cypher: |
     MATCH (me:AssistantUser)<-[:OWNED_BY]-(d:Document) RETURN d
+
+# A PARAMETERIZED view: declared bind variables, with defaults, referenced as `$name` in the body
+# (specs/PARAMETERIZED_VIEWS_MCP.md §3). Referenced bare it runs with the defaults; an inline map on the
+# label supplies overrides — MATCH (p:recent_correspondents {limit: 3}) RETURN p.name — and the console
+# renders the params as a small form, defaults prefilled.
+- name: recent_correspondents
+  description: "People you have emailed, MOST RECENT FIRST (by the last message either way), capped."
+  params:
+    limit:
+      type: int
+      default: 5
+      description: "Maximum people to return."
+    nameContains:
+      type: string
+      default: ""
+      description: "Only people whose name contains this text."
+  # ORDER BY IS NOT OPTIONAL IN A VIEW NAMED "recent_*". This body had no ORDER BY at all, so it
+  # returned an arbitrary slice while its name promised recency. Measured 2026-08-01: asked "who have
+  # I emailed most recently?", two independent models (qwen3.6 and Haiku) both called this view with
+  # limit 1 — correct routing, exactly what the surface tells them to do — and both got a contact
+  # whose last message was 59 days old, when the true most-recent was 44. The view lied and the
+  # clients relayed it.
+  #
+  # Ordered on the EMAILED edge's `lastAt`, which is the authoritative timestamp. Deliberately NOT on
+  # the decorated `p.lastInteractionDays`: that property stores a time-RELATIVE value as a snapshot
+  # (days-since, computed once at decoration time), so it is stale the day after it is written — on
+  # this world all 36 contacts disagree with the edge by >5 days and 11 are NEGATIVE, i.e. claiming a
+  # last interaction in the future. Never sort by a stored "days ago".
+  cypher: |
+    MATCH (me:AssistantUser)-[e:EMAILED]->(p:Person)
+    WHERE $nameContains = '' OR toLower(p.name) CONTAINS toLower($nameContains)
+    WITH p, e.lastAt AS lastAt ORDER BY lastAt DESC
+    WITH p LIMIT $limit RETURN p
+
+# A MATERIALISED view: its result nodes are cached (committed) and a reference reads the cache instead of
+# re-running the body, until the TTL expires — then the next reference recomputes. Same label usage as a
+# regular view; only the caching differs. Useful for expensive bodies (e.g. an agentic-rag traversal).
+- name: mv_correspondents
+  description: "Cached people you have emailed (materialised, refreshed hourly)."
+  materialized: true
+  ttl: 1h
+  # The type the view's rows are — required for a materialised view: the cache binds the members off the
+  # MEMBER set and the scope rewriter needs a label on that variable.
+  outputLabel: Person
+  cypher: |
+    MATCH (me:AssistantUser)-[:EMAILED]->(p:Person) RETURN p
