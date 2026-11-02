@@ -31,8 +31,3 @@
 #   https://github.com/embabel-worlds/realm-markdown-memory    notes under the world's data/memory/
 #   https://github.com/embabel-worlds/realm-mcp-memory         an MCP memory server's memory.jsonl
 #   https://github.com/embabel-worlds/realm-zep-memory         a ZEP_API_KEY and a Zep user id
-#
-# MAIL IS OPT-IN TOO. The views over correspondence and over the assistant's own memory read what a
-# connected inbox brings — the EMAILED edge and DICE propositions — so they ship with the inbox
-# realm rather than here, where a world without mail would list them only to refuse them:
-#   https://github.com/embabel-worlds/realm-email                 correspondents and memory views
