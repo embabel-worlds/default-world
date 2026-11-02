@@ -1,5 +1,10 @@
-# Default realms — installed automatically on first world setup.
-# Each entry is a git repo to clone into realms/{name}.
+# Default realms. Each entry is a git repo, cloned once into the appliance's shared realm cache.
+#
+# NOT A ONE-TIME SEED. The server reads this file as a live tier under every world's own
+# realms.yml, merged by name, so a realm ADDED here arrives in every existing world once the
+# appliance's copy of default-world is updated. Taking one OUT reaches only new worlds: an existing
+# world's clone has its own realms.yml listing what was here when it was made. Add with that in
+# mind — a default realm must be keyless and quick to answer, because everybody gets it.
 - name: research
   repo: https://github.com/embabel-worlds/realm-research.git
   version: "main"
@@ -8,6 +13,13 @@
   version: "main"
 - name: spec
   repo: https://github.com/embabel-worlds/realm-spec.git
+  version: "main"
+# Street-level Britain from keyless official sources. A default because it answers on an empty
+# world — its national views (DistrictCrimeLeague and the like) need no place set up first — and it
+# ships a tour written for exactly that state. Its first national query fetches a few small ONS and
+# gov.uk files; nothing large is downloaded at install.
+- name: uk-streets
+  repo: https://github.com/embabel-worlds/realm-uk-streets.git
   version: "main"
 # A second memory system under the shared Memory label (types/memory.yml): facts held in an
 # Omnigraph graph, recalled through the graph's own BM25 stored query. Needs an Omnigraph server
