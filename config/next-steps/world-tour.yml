@@ -29,8 +29,8 @@
   icon: play
   title: Take the tour
   body: >
-    A short walk round this console: what realms, chat, views, documents and agents are each for,
-    and what you would do with them. It waits for you at every step.
+    A short walk round this console: realms, the coding agent that builds on your world, the apps
+    it makes, and what views, documents and agents are for. It waits for you at every step.
   replaces:
     - take-the-tour_take-the-tour
   action:

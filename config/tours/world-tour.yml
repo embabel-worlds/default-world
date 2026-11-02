@@ -5,7 +5,13 @@
 # answer, which made "Ask your world a question" the first thing a new owner met — and nobody could
 # tell from that title what the tour would do, or what the rest of the console was for. This one
 # walks the console instead: what you have (realms), how to get more (install, or learn your own),
-# how to ask, how to keep a question, where files go, what runs without you, and what to do next.
+# how to BUILD on it, where files go, what runs without you, and what to do next.
+#
+# BUILDING COMES BEFORE ASKING, deliberately. The thing that changes what this is for somebody is a
+# coding agent connected to their world — it writes the realms, apps, views and routines — and apps
+# are what that building produces that a person can open and use. So the coding agent and Apps get
+# the early, fuller stops, and Chat is one short stop near the end. A tour that leads with chat
+# teaches that this is a chatbot.
 #
 # A NEW FILE, NOT AN EDIT, for the reason next-steps/take-the-tour.yml gives: a world is a clone, so
 # an existing world's own copy of getting-started.yml shadows this repo's forever, and an edit there
@@ -30,8 +36,8 @@
   name: A tour of your world
   surface: console
   description: >-
-    A short walk round the console — realms, chat, views, documents and agents — saying what each
-    one is for and what you would do there. It waits for you at every step.
+    A short walk round the console — realms, your coding agent, apps, views, documents and agents —
+    saying what each one is for and what you would do there. It waits for you at every step.
 
   steps:
     - say: >
@@ -63,23 +69,39 @@
         describe the source in a line, and your world drafts a realm from what it finds — you
         review it before anything is installed.
 
-    - open: panel.chat
+    # The coding agent, two legs on the signal next-steps/getting-started.yml uses: a client has
+    # completed a handshake at the CODE door. Registered is not connected.
+    - open: panel.connect
+      doneWhen: |
+        MATCH (me:AssistantUser)-[:HAS_CONFIG]->(d:ConfigMcpDoor {name: 'code'})
+        WHERE d.everConnected
+        RETURN d
       say: >
-        **Chat** is where you ask questions in your own words. It answers from your realms and
-        your files, and shows where each answer came from.
+        A **coding agent** such as Claude Code is how you build on this world: ask it for a realm,
+        an app, a saved question or a routine, and it makes it here, ready to use. If Claude Code is
+        on this machine, setup has already pointed it at your world — start it in a terminal and
+        ask; otherwise, connect one from this page.
 
-    # Typed, never sent: the question stays the user's to change or send, as a tip's does.
-    - set: field.message
-      to: What can this world answer?
+    - open: panel.connect
+      when: |
+        MATCH (me:AssistantUser)-[:HAS_CONFIG]->(d:ConfigMcpDoor {name: 'code'})
+        WHERE d.everConnected
+        RETURN d
       say: >
-        Here is a good first question, typed in for you but not sent. Press **Send** when you
-        like, or ask something of your own.
+        A **coding agent** such as Claude Code is how you build on this world: ask it for a realm,
+        an app, a saved question or a routine, and it makes it here, ready to use. One has already
+        connected, so the next thing you want built is a sentence away.
+
+    - open: panel.apps
+      say: >
+        **Apps** are pages built on your world's data — dashboards, trackers, small tools. Some
+        arrive with realms; for one of your own, ask your coding agent ("build me an app that
+        shows…") and it appears here, using live data from your world.
 
     - open: panel.views
       say: >
-        **Views** are questions worth keeping. Each one is saved once and runs with a click —
-        your realms bring some, and any question you find yourself asking again can be saved as
-        your own. **Query Studio** is where you write one from scratch.
+        **Views** are questions worth keeping. Each one is saved once and runs with a click — your
+        realms bring some, and your coding agent or **Query Studio** can save more of your own.
 
     # Documents, two legs: files already added, or none yet.
     - open: panel.documents
@@ -99,6 +121,15 @@
       say: >
         **Agents** do work without you. Give one a routine and it runs on a schedule, or when
         something happens — and it asks for your approval before anything that needs it.
+
+    # Chat is one stop: opened silently, then the first question typed — never sent — under the
+    # one caption, so it is a quick look rather than the destination.
+    - open: panel.chat
+    - set: field.message
+      to: What can this world answer?
+      say: >
+        **Chat** is for quick questions in your own words, answered from your realms and files with
+        the sources shown. Here is one typed in for you but not sent.
 
     - open: panel.next
       say: >
