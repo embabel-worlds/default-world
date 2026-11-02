@@ -21,27 +21,13 @@
 - name: uk-streets
   repo: https://github.com/embabel-worlds/realm-uk-streets.git
   version: "main"
-# A second memory system under the shared Memory label (types/memory.yml): facts held in an
-# Omnigraph graph, recalled through the graph's own BM25 stored query. Needs an Omnigraph server
-# at the URL in the realm's vendored OpenAPI spec; without one its edge answers empty, reported.
-- name: omnigraph-memory
-  repo: https://github.com/embabel-worlds/realm-omnigraph-memory.git
-  version: "main"
-# Markdown memory under the same Memory label: Claude Code's memory directory, OpenClaw's MEMORY.md
-# and daily logs, a Cline/Roo memory bank, plain notes — read live from the world's data/memory/.
-- name: markdown-memory
-  repo: https://github.com/embabel-worlds/realm-markdown-memory.git
-  version: "main"
-# A self-hosted Graphiti server (Zep's engine) under the same Memory label: facts with the window
-# in which they held. Needs a Graphiti server at the URL in the realm's vendored OpenAPI spec.
-- name: graphiti-memory
-  repo: https://github.com/embabel-worlds/realm-graphiti-memory.git
-  version: "main"
-# Zep Cloud under the same Memory label is OPT-IN: it needs a ZEP_API_KEY and a Zep user id, and
-# installed without them it warns on every :Memory query. Install it in a world that has them:
-#   https://github.com/embabel-worlds/realm-zep-memory
-# The MCP memory server's knowledge graph under the same Memory label: one memory per entity in
-# its memory.jsonl, read live from the world's data/memory/mcp/.
-- name: mcp-memory
-  repo: https://github.com/embabel-worlds/realm-mcp-memory.git
-  version: "main"
+# THE MEMORY REALMS ARE OPT-IN. Each is one more system under the shared Memory label
+# (types/memory.yml), and on a new machine none of them has anything to read: Omnigraph and Graphiti
+# need servers an appliance does not run, and markdown and MCP memory read folders that start
+# empty. As defaults they made every "what do you remember" question ask four sources that could
+# not answer. Install one from the Realms window in a world that has what it reads:
+#   https://github.com/embabel-worlds/realm-omnigraph-memory   an Omnigraph server
+#   https://github.com/embabel-worlds/realm-graphiti-memory    a Graphiti server
+#   https://github.com/embabel-worlds/realm-markdown-memory    notes under the world's data/memory/
+#   https://github.com/embabel-worlds/realm-mcp-memory         an MCP memory server's memory.jsonl
+#   https://github.com/embabel-worlds/realm-zep-memory         a ZEP_API_KEY and a Zep user id
