@@ -40,3 +40,17 @@ codingLlm:
 fallbackCodingLlm:
   role: code_cheap
 # codingModelFallbackAfterFailures: 2
+
+# What the console opens the first time each person arrives in this world, once setup is done:
+#   next-steps     the What next panel — the default, and what a world without this block gets
+#   tour:<id>      start a tour, by the id its file declares — tour:WorldTour is the tour of the console
+#   chat           the chat window
+#   none           nothing; the console opens as it always does
+# Once per person, remembered by the appliance rather than the browser, so a reload, a second
+# browser or another day does not open it again. A value the console does not know means
+# next-steps, and so does a tour this world does not have.
+#
+# An existing world keeps its own world.yml, which shadows this one, so it never gets this block
+# — and gets next-steps, the default, which is the same thing.
+welcome:
+  open: next-steps
