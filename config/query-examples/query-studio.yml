@@ -107,3 +107,14 @@
     WHERE r.installed
     RETURN r.name AS realm
     ORDER BY realm
+
+- id: draw-a-pattern
+  title: Draw a pattern
+  description: Return nodes and the relationships between them, and the answer is a graph — you, linked to your world's views.
+  kind: plain
+  cypher: |
+    // Return the relationship (h) as well as its ends, and the Graph view draws them.
+    MATCH (me:AssistantUser)-[h:HAS_CONFIG]->(v:ConfigView)
+    RETURN me, h, v
+    ORDER BY v.name
+    LIMIT 12
