@@ -1,0 +1,120 @@
+# Starter queries for Query Studio — the cards shown over an empty editor.
+#
+# Each one shows a different thing the query language can do. Some ask a model to read, judge or
+# label as part of the query (`kind: ai`); the rest are plain Cypher over what this world already
+# holds (`kind: plain`). Clicking a card puts its query in the editor and runs it, so the query and
+# its answer appear together.
+#
+# A NEW FILE, deliberately. A world is a clone of this repo, so a file it already has shadows this
+# one by name for good; a new name reaches existing worlds as well as new ones. Add examples in a
+# new file too. A world adds its own in config/query-examples/, and a realm ships them in its own
+# query-examples/ directory, so its examples arrive and leave with it.
+#
+# Every example here must run on a fresh world with the default realms and return rows. The
+# server's CI runs each one and fails if it errors, comes back empty, or (for `kind: ai`) never
+# calls a model. Hobby and Topic are reference vocabulary every world is seeded with; the Config*
+# labels and Realm describe the world itself.
+#
+# Fields:
+#   id           stable name; unique across this world's examples
+#   title        the card's heading
+#   description  one line: what the example demonstrates
+#   kind         ai | plain
+#   cypher       the query, run exactly as written
+
+- id: read-text-into-a-graph
+  title: Read text into a graph
+  description: A model reads a sentence and returns the people and machines in it as nodes and relationships.
+  kind: ai
+  cypher: |
+    // Your world can read. Change the sentence and run it again.
+    CALL ai.fromText(
+      'Ada Lovelace worked with Charles Babbage on the Analytical Engine, which he designed in London.',
+      '(p:Pioneer)-[w:WORKED_ON]->(m:Machine)',
+      {types: "
+        /** Someone named in the text. */
+        class Pioneer extends Entity {
+          /** Their name. */
+          declare name: string
+          /** What they worked on. */
+          @Relationship({ type: 'WORKED_ON' })
+          declare worked: Machine[]
+        }
+        /** A machine or invention. */
+        class Machine extends Entity {
+          /** Its name. */
+          declare name: string
+        }
+      "}) YIELD p, w, m
+    RETURN p, w, m
+
+- id: let-the-model-filter
+  title: Let the model filter
+  description: A WHERE clause written in English — the model keeps only the rows that fit.
+  kind: ai
+  cypher: |
+    // ai.relevant asks the model whether each hobby fits the description.
+    MATCH (h:Hobby)
+    WHERE ai.relevant(h, 'something you can do alone at home on a rainy day')
+    RETURN h.name AS hobby
+
+- id: rank-by-judgement
+  title: Rank by judgement
+  description: ORDER BY a model's score instead of a column.
+  kind: ai
+  cypher: |
+    // ai.score rates every matching topic before LIMIT picks the top ten.
+    MATCH (t:Topic)
+    RETURN t.name AS topic
+    ORDER BY ai.score(t, 'most useful to a small business owner') DESC
+    LIMIT 10
+
+- id: label-each-row
+  title: Label each row
+  description: A model adds a column, sorting each row into a category you name.
+  kind: ai
+  cypher: |
+    // ai.classify answers the question for each hobby.
+    MATCH (h:Hobby)
+    RETURN h.name AS hobby, ai.classify(h, 'where you do it: indoors or outdoors') AS where
+    LIMIT 12
+
+- id: your-recent-runs
+  title: Your recent runs
+  description: Your world's own activity is a graph too — the code it ran, newest first, and how each run ended.
+  kind: plain
+  cypher: |
+    MATCH (me:AssistantUser)-[:HAS_CONFIG]->(r:ConfigRun)
+    RETURN r.scriptName AS script, r.language AS language, r.status AS status, r.durationMs AS ms
+    ORDER BY r.at DESC
+    LIMIT 10
+
+- id: count-and-group
+  title: Count and group
+  description: Aggregate with count() — your saved views, grouped by where they came from.
+  kind: plain
+  cypher: |
+    MATCH (me:AssistantUser)-[:HAS_CONFIG]->(v:ConfigView)
+    RETURN coalesce(nullif(v.source, ''), 'your world') AS from, count(v) AS views
+    ORDER BY views DESC
+
+- id: your-realms
+  title: Your realms
+  description: The realms installed in this world, read like any other data.
+  kind: plain
+  cypher: |
+    MATCH (r:Realm)
+    WHERE r.installed
+    RETURN r.name AS realm
+    ORDER BY realm
+
+- id: draw-a-pattern
+  title: Draw a pattern
+  description: Return nodes and the relationships between them, and the answer is a graph — you, linked to your world's views.
+  kind: plain
+  cypher: |
+    // Return the relationship (h) as well as its ends, and the Graph view draws them.
+    MATCH (me:AssistantUser)-[h:HAS_CONFIG]->(v:ConfigView)
+    RETURN me, h, v
+    ORDER BY v.name
+    LIMIT 12
