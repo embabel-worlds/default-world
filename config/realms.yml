@@ -21,6 +21,13 @@
 - name: uk-streets
   repo: https://github.com/embabel-worlds/realm-uk-streets.git
   version: "main"
+# A chessboard, Stockfish and the imbalances of a position, keyless. The engine travels with the
+# realm and runs inside the appliance, so it answers on an empty world with nothing to set up.
+# Plans need the model granted, and the master and player views a Lichess token; ChessStatus says
+# which is missing.
+- name: chess
+  repo: https://github.com/embabel-worlds/realm-chess.git
+  version: "main"
 # THE MEMORY REALMS ARE OPT-IN. Each is one more system under the shared Memory label
 # (types/memory.yml), and on a new machine none of them has anything to read: Omnigraph and Graphiti
 # need servers an appliance does not run, and markdown and MCP memory read folders that start
