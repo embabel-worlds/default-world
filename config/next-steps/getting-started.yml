@@ -53,7 +53,10 @@
     is not. Adding a key turns the whole realm on — its data, its verbs and its vocabulary.
   action:
     label: What is waiting
-    chatInput: Which of my integrations are waiting for an API key, and which key does each need?
+    chatInput: Which of my APIs are skipped until I add a key, and which key unlocks each one?
+  # Worded as the graph names it. "Which of my integrations are waiting for an API key" sent the
+  # persona looking for an Integration label that does not exist, and it asked the owner what an
+  # integration was. What it should find is ConfigSkippedApi, the API and the key that unlocks it.
   # NOT "install a realm", which this template pre-satisfies: a stock world ships with realms
   # aboard, so that step read DONE on a fresh appliance before its owner had done anything —
   # exactly the trap `userAuthored` exists to avoid, one level up in the content.
