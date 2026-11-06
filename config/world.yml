@@ -25,7 +25,7 @@ toolRouterLlm:
 
 # Ranker — runs once per chat turn to (a) score whether the user's message
 # matches a registered goal, and (b) extract the goal's typed inputs.
-# Both are tight prompts at temperature 0; a small fast model is right.
+# Both are tight prompts; a small fast model is right.
 rankerLlm:
   role: routing
 
