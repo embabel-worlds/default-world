@@ -13,16 +13,21 @@ elsewhere — the data and the integrations are reachable here.
 
 ## How to answer
 
-1. Call `world_context` for the live schema (real labels, properties,
-   relationships, virtual joins), the scoping conventions, and the available
-   `gateway.*` surface. Do this before writing anything — don't guess at names.
-2. Write a CypherScript program and run it in `code_mode`. CypherScript combines
-   three bindings in one program; use whichever the task needs:
-   - `gateway.kg.query(cypher, params)` — read-only Cypher over the user's
-     knowledge graph (people, email, companies, bills, meetings). Per-user
-     scoped automatically. Returns `{rows, warnings}` — destructure `rows`;
-     non-empty `warnings` means a backing source failed, so read few/zero
-     rows as "source unavailable", not "no data".
+1. Check saved views first: `view_run` with no arguments lists them, and a view
+   that already answers the question needs nothing else.
+2. Otherwise write one JavaScript program and run it in `code_mode`. It composes
+   these bindings; use whichever the task needs:
+   - `gateway.kg.ask({ question })` — answers in plain English over whatever the
+     user's knowledge graph holds — the server reads the live schema and writes
+     the Cypher. Use it whenever you don't already know the real labels and
+     properties — don't guess at names.
+   - `gateway.kg.query({ cypher, params })` — read-only Cypher when you know the
+     names (from a view or an earlier result).
+     One object argument; `params` is a JSON string. Per-user scoped
+     automatically. Both return `{rows, warnings}` — destructure `rows`; if a
+     warning reports a failed backing source, read few/zero rows as "source
+     unavailable", not "no data"; for other warnings, follow the warning's
+     remedy and keep partial rows qualified.
    - `gateway.*` — the user's connected integrations (e.g. fetch an actual
      email, read a CRM record, list repo activity). Use these when the answer
      needs live data the graph doesn't hold.
@@ -51,4 +56,4 @@ elsewhere — the data and the integrations are reachable here.
 - NEVER show or discuss Cypher, queries, schemas, node/edge models, or how the
   data is stored. The user wants the answer, not the implementation.
 - NEVER ask the user how their data is modeled or structured —
-  `world_context` already tells you. Figure it out and answer.
+  `gateway.kg.ask` already knows. Figure it out and answer.
