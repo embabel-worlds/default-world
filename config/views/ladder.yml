@@ -1,0 +1,133 @@
+# The LADDER views — the Compare and Promoted rungs of Mirror → Compare → Promote → Retire, for every
+# shared label (config/types/README.md, "Shared labels"). A shared label lets a realm's system answer a
+# query written against the parent; these views are how a person SEES which systems stand behind the
+# label, on their own data, before deciding to promote and retire.
+#
+# All but one are TABULAR, and terminal: each RETURNs columns, not a node, so the rows are a report —
+# run them by name (`gateway.view.run`, `POST /api/v1/admin/kg/views/{name}/run`, the console) and read
+# the table. They do not compose: `MATCH (x:memory_bakeoff)` is refused, because a projection cannot be
+# inlined into a traversal (ViewExpander: a view takes over a label only when `memberQuery` finds a
+# terminal `RETURN <variable>`). `my_todos` is the one SUBSET view here — `MATCH … RETURN t`, rows that
+# ARE nodes — so it composes as a label the way examples.yml's views do.
+#
+# WHY TABULAR FOR A BAKEOFF. A subset view returns nodes, and the point of a bakeoff is the columns
+# a node does not carry: which SYSTEM answered (m.source), the EDGE's score and rank, the labels. A
+# table puts every system's answer in one result, one row each, which is the comparison.
+#
+# SCOPE IS NOT WRITTEN HERE. The scope rewriter binds every body to the acting user — :Memory is
+# implicitly the caller's, :PromotedMemory is held by its userId, :Todo by its OWNED_BY anchor — so no
+# view needs, or is permitted, its own ownership predicate beyond the anchor it traverses from.
+#
+# TWO QUESTIONS THESE VIEWS RAISE, answered against the engine (assistant repo) on 2026-10-31:
+#
+# 1. CAN A VIEW BODY UNION TWO SYSTEMS? Yes, at statement level. The scope rewriter cuts a statement-level
+#    UNION apart and scopes each branch as the standalone query it is (`UnionBranches`), and Virtual
+#    Cypher plans and fetches each branch's joins for that branch (MovieImpromptuFaithfulNeo4jIT, "UNION
+#    over virtual joins"). What is refused: a UNION INSIDE a `CALL {}` whose branches share a variable
+#    name (`NestedUnionNames`), `UNION` mixed with `UNION ALL`, and branches whose column names differ.
+#    So `todo_bakeoff` EXISTS — but not here. It reads `GitHubIdentity` / `GitHubIssue`, and a world view
+#    reading labels no installed realm declares is filed as a WARNING against config/views on EVERY world
+#    (WorldContentLoader.reportUnownedLabels: "read label(s) NO installed realm declares … can NEVER
+#    return a row"). A view over a realm's labels belongs with the realm: `todo_bakeoff` and
+#    `my_github_todos` are in realm-github's views/todos.yml; `my_todos` here is the stored side alone.
+#
+# 2. CAN `Todo` TAKE `id: { identity: true }` WITH ROWS ALREADY STORED? The loader accepts it
+#    (IdPropertyRule exempts a type whose identity is `id`; FileSystemWorldIdPropertyTest "id as the
+#    identity loads as before"; WorldTypeLoader records the identity without reading the store) — but
+#    the repository then REQUIRES `id` on every create (EntryShape.missingRequired), where today Todo
+#    "keeps the random-id behaviour" (RepositoryStore.writeOne). The flag is therefore not taken; see
+#    config/types/todo.yml. `my_todos` reads `t.id` regardless — a stored row's `id` is its node key.
+#
+# ONE MORE THING TO KNOW ABOUT `promoted_memories`. `:PromotedMemory` is the ledger the engine writes
+# (PromotedMemoryLedger, behind `gateway.memory.promote`) — a label with no declared type, scoped
+# PRIVATE by default and held to the caller by `userId`. The engine lists it in HostPersistedLabels.kt,
+# which is what keeps the loader from filing the unowned-label WARNING for this view; on an engine
+# without that entry the view still loads and runs, with the warning. It answers empty on a world
+# with no ledger rows, which until the first promotion is every world.
+
+# COMPARE. One row per memory each installed system recalls for a topic — the same edge every memory
+# query uses, fanned out to every child of :Memory that declares it. `system` is the child that
+# answered. Read it to see what an incumbent holds that the assistant does not, and the reverse.
+- name: memory_bakeoff
+  description: >-
+    Compare your memory systems on one topic: one row per memory each installed system recalls,
+    `system` naming which (e.g. 'dice' for the assistant's own, 'zep', 'graphiti'). Use it to see
+    what an incumbent holds that the assistant doesn't, and which rows to promote. `status` is
+    ACTIVE unless the row was promoted. Rows: {system, labels, id, text, confidence, status, score, rank}.
+  params:
+    topic:
+      type: string
+      description: "What the memories should be about — the semantic seed, e.g. 'coffee'."
+    limit:
+      type: int
+      default: 10
+      description: "Rows to return, taken by rank ACROSS systems so each system's best rows survive the cut. Raise it to see deeper into each."
+  # ORDER BY r.rank BEFORE the limit, not by system: each system ranks its own recall 1..n, so a cut
+  # by rank takes every system's top rows in turn. Cutting after `ORDER BY system` would hand the whole
+  # limit to the alphabetically-first system and show nothing of the others — the opposite of a bakeoff.
+  # The rows are then re-ordered by system for reading.
+  cypher: |
+    MATCH (:Concept {value: $topic})-[r:RELEVANT_TO]->(m:Memory)
+    WITH m, r ORDER BY r.rank LIMIT $limit
+    RETURN m.source AS system, labels(m) AS labels, m.id AS id, m.text AS text,
+           m.confidence AS confidence, m.status AS status, r.score AS score, r.rank AS rank
+    ORDER BY system, rank
+
+# COMPARE, summarised: how many memories each system recalls for the topic, and its best score. Run
+# this first — it says which systems are installed and answering before you read their rows.
+- name: memory_systems
+  description: >-
+    Which memory systems answer for a topic, and how strongly: one row per installed system with
+    the count of memories it recalls and its best relevance score. The quick form of memory_bakeoff —
+    run it to see who is behind :Memory before reading rows. Rows: {system, memories, best}.
+  params:
+    topic:
+      type: string
+      description: "What the memories should be about — the semantic seed, e.g. 'coffee'."
+  cypher: |
+    MATCH (:Concept {value: $topic})-[r:RELEVANT_TO]->(m:Memory)
+    RETURN m.source AS system, count(m) AS memories, max(r.score) AS best
+    ORDER BY memories DESC, system ASC
+
+# PROMOTED. The ledger `gateway.memory.promote` writes, read back: what has been copied into the
+# assistant's own memory, from which system. This is the honest answer to "what have I promoted" —
+# `MATCH (m:Memory {status:'PROMOTED'})` is not, because DiceMemory rows carry DICE's own PROMOTED
+# (config/types/memory.yml, `status`). Rows carry the source's id, not the copy's: the copy is an
+# ordinary DiceMemory, found by its text.
+- name: promoted_memories
+  description: >-
+    Memories you have promoted into the assistant's own memory from another system, newest first —
+    the ledger gateway.memory.promote writes. `system` is where each came from, `id` its id THERE.
+    Empty until you promote something. Optionally one source system only. Rows: {system, id, text, promotedAt}.
+  params:
+    source:
+      type: string
+      default: ""
+      description: "Only promotions from this system, e.g. 'zep'. Blank means all of them."
+  cypher: |
+    MATCH (p:PromotedMemory)
+    WHERE $source = '' OR p.source = $source
+    RETURN p.source AS system, p.externalId AS id, p.text AS text, p.promotedAt AS promotedAt
+    ORDER BY p.promotedAt DESC
+
+# THE WORLD'S OWN TODOS — a SUBSET view, so it composes: `MATCH (t:my_todos) RETURN t.title`, or
+# `(t:my_todos {open: false})` for the whole list. Reads the STORED list only, by its OWNED_BY anchor;
+# a child system's rows (GitHubIssue) reach :Todo through that child's own anchor and its own view
+# (realm-github's `my_github_todos`); the Compare rung for todos is realm-github's `todo_bakeoff`, a UNION of both — see question 1 above.
+- name: my_todos
+  description: >-
+    Your own todo list — the tasks stored in this world, open ones by default. A subset of Todo,
+    so it composes as a label. Does NOT include todos another system holds (GitHub issues); those
+    answer to :Todo through their own anchor. Rows are Todo nodes: {id, title, due, priority, done, tags, notes, source, url}.
+  params:
+    open:
+      type: boolean
+      default: true
+      description: "true = only tasks not yet done; false = every task, done or not."
+  # `done` is compared as a STRING on purpose. The property declares no `type:` (config/types/todo.yml
+  # says why), so a stored row holds whatever the caller sent — boolean true or the text 'true' — and
+  # `NOT t.done` on the text form is a type error that would fail the whole view. toString() reads both.
+  cypher: |
+    MATCH (me:AssistantUser)<-[:OWNED_BY]-(t:Todo)
+    WHERE NOT $open OR coalesce(toString(t.done), 'false') <> 'true'
+    RETURN t

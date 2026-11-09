@@ -25,6 +25,16 @@
 # the status it names; a CONTRADICTED (known-false) memory never surfaces, even when asked for. The
 # `lifecycle:` below is what makes the scope rewriter hold EVERY memory label to that — this one and
 # each child under it, whichever system fetched the node — the way it holds a DICE :Proposition.
+#
+# THE LADDER. Because every system answers to the one label, moving between systems is four steps,
+# and nothing written against :Memory — a view, an app, an agent's query — changes at any of them:
+#   MIRROR   install the realm that brings a system. Its child joins :Memory and answers beside the rest.
+#   COMPARE  `memory_bakeoff` (config/views/ladder.yml): one row per memory each installed system recalls
+#            for a topic, `system` naming which; `memory_systems` is the per-system count for the same topic.
+#   PROMOTE  `gateway.memory.promote` copies one system's memory into the assistant's own (DiceMemory) and
+#            records it in a ledger the `promoted_memories` view reads. The original then carries status
+#            PROMOTED and leaves :Memory reads, so the fact answers once (see `status` below).
+#   RETIRE   uninstall the realm. :Memory keeps answering from what remains.
 - name: Memory
   visibility: internal
   userAnchor: false
@@ -39,7 +49,10 @@
         identity: "true"
     text: "The remembered fact, in words."
     confidence: "How sure the system is of it, 0..1."
-    status: "Curation state: ACTIVE (current), SUPERSEDED or STALE (audits only — pin it explicitly), PROMOTED. CONTRADICTED is known-false and is never returned."
+    # PROMOTED is defined HERE, for the whole family. DICE has a PropositionStatus.PROMOTED of its own
+    # that means something else (a proposition projected to the typed graph), and DiceMemory rows carry
+    # DICE's value through — so the same word reaches a reader with two meanings, told apart by `source`.
+    status: "Curation state: ACTIVE (current); SUPERSEDED or STALE (audits only — pin it explicitly); PROMOTED — copied into the assistant's own memory (DiceMemory), so the original is no longer read as a memory: a plain :Memory read skips it (lifecycle active: [ACTIVE]) and the fact answers once, from the copy, with source 'dice'. CAUTION: on a DiceMemory row PROMOTED is DICE's own state (projected to the typed graph), not this one, so {status:'PROMOTED'} on :Memory mixes the two. For \"what have I promoted\" run the promoted_memories view (the ledger), or add WHERE m.source <> 'dice'. CONTRADICTED is known-false and is never returned."
     created: "When it was first learned (ISO-8601)."
     revised: "When its content last changed (ISO-8601)."
     source: "Which memory system holds it, e.g. 'dice'."
