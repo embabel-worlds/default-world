@@ -8,6 +8,10 @@
 - name: research
   repo: https://github.com/embabel-worlds/realm-research.git
   version: "main"
+# Shared types that GitHub's issue, commit and review types extend.
+- name: dev-vocabulary
+  repo: https://github.com/embabel-worlds/realm-dev-vocabulary.git
+  version: "main"
 - name: github
   repo: https://github.com/embabel-worlds/realm-github.git
   version: "main"
