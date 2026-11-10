@@ -1,5 +1,10 @@
-# Default realms — installed automatically on first world setup.
-# Each entry is a git repo to clone into realms/{name}.
+# Default realms. Each entry is a git repo, cloned once into the appliance's shared realm cache.
+#
+# NOT A ONE-TIME SEED. The server reads this file as a live tier under every world's own
+# realms.yml, merged by name, so a realm ADDED here arrives in every existing world once the
+# appliance's copy of default-world is updated. Taking one OUT reaches only new worlds: an existing
+# world's clone has its own realms.yml listing what was here when it was made. Add with that in
+# mind — a default realm must be keyless and quick to answer, because everybody gets it.
 - name: research
   repo: https://github.com/embabel-worlds/realm-research.git
   version: "main"
@@ -9,27 +14,32 @@
 - name: spec
   repo: https://github.com/embabel-worlds/realm-spec.git
   version: "main"
-# A second memory system under the shared Memory label (types/memory.yml): facts held in an
-# Omnigraph graph, recalled through the graph's own BM25 stored query. Needs an Omnigraph server
-# at the URL in the realm's vendored OpenAPI spec; without one its edge answers empty, reported.
-- name: omnigraph-memory
-  repo: https://github.com/embabel-worlds/realm-omnigraph-memory.git
+# Street-level Britain from keyless official sources. A default because it answers on an empty
+# world — its national views (DistrictCrimeLeague and the like) need no place set up first — and it
+# ships a tour written for exactly that state. Its first national query fetches a few small ONS and
+# gov.uk files; nothing large is downloaded at install.
+- name: uk-streets
+  repo: https://github.com/embabel-worlds/realm-uk-streets.git
   version: "main"
-# Markdown memory under the same Memory label: Claude Code's memory directory, OpenClaw's MEMORY.md
-# and daily logs, a Cline/Roo memory bank, plain notes — read live from the world's data/memory/.
-- name: markdown-memory
-  repo: https://github.com/embabel-worlds/realm-markdown-memory.git
+# A chessboard, Stockfish and the imbalances of a position, keyless. The engine travels with the
+# realm and runs inside the appliance, so it answers on an empty world with nothing to set up.
+# Plans need the model granted, and the master and player views a Lichess token; ChessStatus says
+# which is missing.
+- name: chess
+  repo: https://github.com/embabel-worlds/realm-chess.git
   version: "main"
-# A self-hosted Graphiti server (Zep's engine) under the same Memory label: facts with the window
-# in which they held. Needs a Graphiti server at the URL in the realm's vendored OpenAPI spec.
-- name: graphiti-memory
-  repo: https://github.com/embabel-worlds/realm-graphiti-memory.git
-  version: "main"
-# Zep Cloud under the same Memory label is OPT-IN: it needs a ZEP_API_KEY and a Zep user id, and
-# installed without them it warns on every :Memory query. Install it in a world that has them:
-#   https://github.com/embabel-worlds/realm-zep-memory
-# The MCP memory server's knowledge graph under the same Memory label: one memory per entity in
-# its memory.jsonl, read live from the world's data/memory/mcp/.
-- name: mcp-memory
-  repo: https://github.com/embabel-worlds/realm-mcp-memory.git
-  version: "main"
+# THE MEMORY REALMS ARE OPT-IN. Each is one more system under the shared Memory label
+# (types/memory.yml), and on a new machine none of them has anything to read: Omnigraph and Graphiti
+# need servers an appliance does not run, and markdown and MCP memory read folders that start
+# empty. As defaults they made every "what do you remember" question ask four sources that could
+# not answer. Install one from the Realms window in a world that has what it reads:
+#   https://github.com/embabel-worlds/realm-omnigraph-memory   an Omnigraph server
+#   https://github.com/embabel-worlds/realm-graphiti-memory    a Graphiti server
+#   https://github.com/embabel-worlds/realm-markdown-memory    notes under the world's data/memory/
+#   https://github.com/embabel-worlds/realm-mcp-memory         an MCP memory server's memory.jsonl
+#   https://github.com/embabel-worlds/realm-zep-memory         a ZEP_API_KEY and a Zep user id
+#
+# MAIL IS OPT-IN TOO. The views over correspondence and over the assistant's own memory read what a
+# connected inbox brings — the EMAILED edge and DICE propositions — so they ship with the inbox
+# realm rather than here, where a world without mail would list them only to refuse them:
+#   https://github.com/embabel-worlds/realm-email                 correspondents and memory views

@@ -1,0 +1,137 @@
+# The tour the "Take the tour" next step starts — one short stop for each part of the console,
+# saying what it is FOR and what you would do there.
+#
+# WHY THIS EXISTS BESIDE getting-started.yml. `FirstQuestion` asks one question and follows the
+# answer, which made "Ask your world a question" the first thing a new owner met — and nobody could
+# tell from that title what the tour would do, or what the rest of the console was for. This one
+# walks the console instead: what you have (realms), how to get more (install, or learn your own),
+# how to BUILD on it, where files go, what runs without you, and what to do next.
+#
+# BUILDING COMES BEFORE ASKING, deliberately. The thing that changes what this is for somebody is a
+# coding agent connected to their world — it writes the realms, apps, views and routines — and apps
+# are what that building produces that a person can open and use. So the coding agent and Apps get
+# the early, fuller stops, and Chat is one short stop near the end. A tour that leads with chat
+# teaches that this is a chatbot.
+#
+# A NEW FILE, NOT AN EDIT, for the reason next-steps/take-the-tour.yml gives: a world is a clone, so
+# an existing world's own copy of getting-started.yml shadows this repo's forever, and an edit there
+# would reach no appliance that already exists. A new name has nothing to shadow it.
+#
+# `surface: console` because it opens panels only the console has — Learn a source, Views, Agents
+# and What next are not panels in the Me app, which would refuse the tour by name.
+#
+# THE WORDS ARE FOR SOMEBODY WHO HAS NEVER SEEN THIS. Two or three sentences a stop, the console's
+# own names in bold so the eye can find them on screen, and no query language. "Knowledge graph"
+# appears once, and is explained where it does.
+#
+# `say: >`, FOLDED, not `|`. Captions are rendered with every newline as a line break, so a literal
+# block puts this file's wrapping on screen mid-sentence. Folded joins the lines and keeps a blank
+# line as a new paragraph.
+#
+# BRANCHES follow the convention getting-started.yml set (me#1131): `when` is "this stop applies
+# here" and `doneWhen` on its twin is the other leg, so an empty appliance is told what to do first
+# rather than shown an empty list and congratulated on it.
+
+- id: WorldTour
+  name: A tour of your world
+  surface: console
+  description: >-
+    A short walk round the console — realms, your coding agent, apps, views, documents and agents —
+    saying what each one is for and what you would do there. It waits for you at every step.
+
+  steps:
+    - say: >
+        Welcome. This is your **world**: the systems you use and the files you add, joined into one
+        **knowledge graph** — a map of the people, things and records in them and how they
+        connect — kept on this machine.
+
+        This tour stops at each part of the console and says what it is for; press **Next** when
+        you are ready.
+
+    # Realms, two legs: something installed already, or nothing yet.
+    - open: panel.realms
+      when: MATCH (r:Realm) WHERE r.installed RETURN r LIMIT 1
+      say: >
+        **Realms** are how your world learns about a system — a service you use, a database, a
+        source of public data. The ones marked *Installed* are already here. To add another, choose
+        it and press **Install**; uninstall it and everything it brought leaves with it.
+
+    - open: panel.realms
+      doneWhen: MATCH (r:Realm) WHERE r.installed RETURN r LIMIT 1
+      say: >
+        **Realms** are how your world learns about a system — a service you use, a database, a
+        source of public data. Nothing is installed yet, so this is the place to start: browse the
+        catalogue, choose a realm and press **Install**.
+
+    - open: panel.learn
+      say: >
+        Nobody has made a realm for your own database or API? Create one here. Press **Connect**,
+        describe the source in a line, and your world drafts a realm from what it finds — you
+        review it before anything is installed.
+
+    # The coding agent, two legs on the signal next-steps/getting-started.yml uses: a client has
+    # completed a handshake at the CODE door. Registered is not connected.
+    - open: panel.connect
+      doneWhen: |
+        MATCH (me:AssistantUser)-[:HAS_CONFIG]->(d:ConfigMcpDoor {name: 'code'})
+        WHERE d.everConnected
+        RETURN d
+      say: >
+        A **coding agent** such as Claude Code is how you build on this world: ask it for a realm,
+        an app, a saved question or a routine, and it makes it here, ready to use. If Claude Code is
+        on this machine, setup has already pointed it at your world — start it in a terminal and
+        ask; otherwise, connect one from this page.
+
+    - open: panel.connect
+      when: |
+        MATCH (me:AssistantUser)-[:HAS_CONFIG]->(d:ConfigMcpDoor {name: 'code'})
+        WHERE d.everConnected
+        RETURN d
+      say: >
+        A **coding agent** such as Claude Code is how you build on this world: ask it for a realm,
+        an app, a saved question or a routine, and it makes it here, ready to use. One has already
+        connected, so the next thing you want built is a sentence away.
+
+    - open: panel.apps
+      say: >
+        **Apps** are pages built on your world's data — dashboards, trackers, small tools. Some
+        arrive with realms; for one of your own, ask your coding agent ("build me an app that
+        shows…") and it appears here, using live data from your world.
+
+    - open: panel.views
+      say: >
+        **Views** are questions worth keeping. Each one is saved once and runs with a click — your
+        realms bring some, and your coding agent or **Query Studio** can save more of your own.
+
+    # Documents, two legs: files already added, or none yet.
+    - open: panel.documents
+      when: MATCH (d:Document) RETURN d LIMIT 1
+      say: >
+        **Documents** holds the files you have added. They are read and indexed on this machine,
+        and searched alongside your realms whenever you ask something.
+
+    - open: panel.documents
+      doneWhen: MATCH (d:Document) RETURN d LIMIT 1
+      say: >
+        **Documents** is for your files — notes, reports, PDFs. Add one here and it is read and
+        indexed on this machine, then searched alongside your realms whenever you ask. Nothing has
+        been added yet.
+
+    - open: panel.agents
+      say: >
+        **Agents** do work without you. Give one a routine and it runs on a schedule, or when
+        something happens — and it asks for your approval before anything that needs it.
+
+    # Chat is one stop: opened silently, then the first question typed — never sent — under the
+    # one caption, so it is a quick look rather than the destination.
+    - open: panel.chat
+    - set: field.message
+      to: What can this world answer?
+      say: >
+        **Chat** is for quick questions in your own words, answered from your realms and files with
+        the sources shown. Here is one typed in for you but not sent.
+
+    - open: panel.next
+      say: >
+        That's the tour. **What next** lists the things worth doing in this world and ticks each
+        one off as you do it. Come back to it, or to this tour under **Tours**, whenever you like.

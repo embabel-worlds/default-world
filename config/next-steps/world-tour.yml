@@ -1,0 +1,50 @@
+# The tour offer, again in a file of its own — and replacing the one in take-the-tour.yml.
+#
+# WHY NOT EDIT take-the-tour.yml. Read its header: a world is a clone, so every world that exists
+# already has its own copy of that file, which shadows this repo's by name for good. Pointing it at
+# the new tour would reach new installs and no existing appliance. This file has a new name, so
+# nothing shadows it and it arrives everywhere.
+#
+# RETIRING THE OLD STEP WITHOUT TOUCHING IT. An existing world will now declare both steps: this
+# one from here, and the old one from its own copy. Nothing in content can remove a file somebody
+# else's clone holds, and the old step's `doneWhen` is in that copy too, so it cannot be taught to
+# stand aside. So this step says which one it replaces, and the console hides that one whenever this
+# one is present. `replaces` is the console's field, read like `tour` and `chatInput` — the server
+# passes it through untouched.
+#
+#   - A world with both files (every existing world, and every new clone) shows this step only.
+#   - A world with only the old file — a template or appliance that has not taken this release —
+#     never sees `replaces` and keeps the old step, which still works.
+#   - A console that predates `replaces` shows both, each starting a tour that still exists.
+#
+# The id named is the one the server gives the old step: the file's stem, an underscore, the id it
+# declares. It is written out in full rather than matched by its suffix, because a namespace prefix
+# is not something a client can reliably strip — the reason tours carry `declaredId` at all.
+
+- id: world-tour
+  # Ahead of the old step's 5, so a console that shows both puts the new one first.
+  order: 4
+  surface: all
+  category: setup
+  icon: play
+  title: Take the tour
+  body: >
+    A short walk round this console: realms, the coding agent that builds on your world, the apps
+    it makes, and what views, documents and agents are for. It waits for you at every step.
+  replaces:
+    - take-the-tour_take-the-tour
+  action:
+    label: Start the tour
+    tour: WorldTour
+    # For a surface with no tour runner, or one that cannot run this tour: it falls through to
+    # this rather than offering a button that does nothing.
+    chatInput: What can this world answer?
+
+  # The same signal the old step used, and for the reasons its own comment gives at length: one
+  # true signal beats a compound one, and `userAuthored` — not any view — because every world ships
+  # views. Finishing the tour is not the signal: a finished tour is remembered by the browser that
+  # ran it, not by the world, and so cannot be asked about in Cypher.
+  doneWhen: |
+    MATCH (me:AssistantUser)-[:HAS_CONFIG]->(v:ConfigView)
+    WHERE v.userAuthored
+    RETURN v LIMIT 1

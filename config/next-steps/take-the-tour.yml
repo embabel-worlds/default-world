@@ -8,6 +8,10 @@
 #
 # The rule, for anything added here later: ship new content as a NEW FILE. Edit an existing
 # one only to fix something whose audience is genuinely new worlds alone.
+#
+# REPLACED by world-tour.yml beside it, which names this step in its `replaces` so the console shows
+# that one instead. Left as it was, because every existing world holds its own copy of this file and
+# a world without the new one should still be offered a tour that works.
 
 - id: take-the-tour
   order: 5
