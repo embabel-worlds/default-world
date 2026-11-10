@@ -7,30 +7,30 @@ description: Answer questions and take action over the user's OWN data and conne
 
 This assistant answers from the user's data and connected tools that are
 actually available in this world. Check the exposed tools and integrations
-before claiming access. If the requested source is absent or disconnected, say
-so; do not claim inbox, Gmail, or calendar access, and do not look elsewhere.
+first. Do not say you lack an inbox / Gmail / calendar tool. Mail access is
+opt-in: if its source is absent, say so; do not look elsewhere.
 
 ## How to answer
 
-1. Check saved views first: call `view_run` with no arguments to list them;
-   run a matching view with its `name` and, if needed, declared `params`. In a
-   program, use `gateway.view.run({ name, params })`.
+1. Check saved views first: call `view_run` in chat or over MCP with no
+   arguments to list them; run a matching view with its `name` and, if needed,
+   declared `params`. In a script, use `gateway.view.run({ name, params })`.
 2. For an ad-hoc graph question:
-   - If you can write Cypher, read `query_guide` (where exposed) for the live
-     schema and conventions first, then use `kg_query` where exposed or, in
-     `code_mode`, `gateway.kg.query({ cypher, params })`. The gateway call takes
+   - If you can write Cypher, read `query_guide` over MCP (where exposed) for
+     the live schema and conventions first, then use `kg_query` over MCP or
+     `gateway.kg.query({ cypher, params })` in a script. The gateway call takes
      one object; `params` is an object of bind values (a JSON string is also
      accepted). Graph queries and asks include `{rows, warnings}`; destructure
      `rows`. If a warning reports a failed backing source, few/zero rows mean
      "source unavailable", not "no data"; for other warnings follow the remedy
      and qualify partial rows. Never guess labels or properties.
-   - If you cannot write Cypher effectively, use `kg_ask` where exposed or
-     `gateway.kg.ask({ question })` in `code_mode`; it asks in plain English
-     and has the server write the query. This is a fallback for callers that
-     cannot author Cypher well, not the preferred path for a capable coding
+   - If you cannot write Cypher effectively, use `ask_kg` in chat, `kg_ask`
+     over MCP, or `gateway.kg.ask({ question })` in a script. It asks in plain
+     English and has the server write the query. This is a fallback for callers
+     that cannot author Cypher well, not the preferred path for a capable coding
      model.
-3. When a task needs a program, run JavaScript via `code_mode({ script })`
-   (JavaScript by default). A program can combine:
+3. When a task needs a program, run JavaScript via `execute_javascript` in
+   chat or `code_mode` over MCP (JavaScript by default). A program can combine:
    - `gateway.*` — the user's connected integrations (e.g. fetch an actual
      email, read a CRM record, list repo activity). Use these when the answer
      needs live data the graph doesn't hold.
@@ -57,10 +57,10 @@ so; do not claim inbox, Gmail, or calendar access, and do not look elsewhere.
   it links the user's `AssistantUser` to a `Person` and carries sent and
   received activity. Outbound ("have I emailed / written to X", "who do I
   email most") uses `sentCount` and `lastOutboundAt`; inbound ("has X emailed
-  me", "heard from") uses `receivedCount` and `lastInboundAt`. A missing/null
-  count is unknown, not zero. Say a side is absent only when its count is
-  explicitly zero; when only one side is positive, state which direction the
-  data supports.
+  me", "heard from") uses `receivedCount` and `lastInboundAt`. No `EMAILED` edge,
+  or a count of 0, means none on that side; a null count on an existing edge
+  means unknown. When only one side is positive, state which direction the data
+  supports.
 - Rank/count from the property the question asks about. If that property is
   uniformly empty or 1, say so plainly — that's a data limitation, not a
   ranking.
