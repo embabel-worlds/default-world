@@ -1,0 +1,47 @@
+# The user's own folders, read live on every query by the `files` producer. Nothing is copied or
+# indexed: the folder on disk is the answer.
+#
+# `@folders` is every folder the world's owner has named in config/world.yml:
+#
+#   folders:
+#     documents: /Users/you/Documents
+#
+# A file there is named by its folder, then its path inside it (`documents/2026/plan.md`). Only a person
+# editing world.yml can name a folder; nothing the assistant does can add one. Until one is named these
+# producers read nothing, and the File and Folder types (types/local-files.yml) stay out of the schema.
+#
+# A world with its own producers/local-files.yml (the desktop app writes one) uses that instead.
+
+# One row per file: its metadata, and its matching lines when a query filters on content.
+- name: worldFiles
+  kind: files
+  roots: ["@folders"]
+  maxFiles: 5000
+  contentCapKb: 64
+
+# One row per folder, with the count and size of the files directly in it.
+- name: worldFolders
+  kind: files
+  emit: directories
+  roots: ["@folders"]
+  maxFiles: 5000
+
+# The term is the key: one row per file whose content contains it.
+- name: fileContentSearch
+  kind: files
+  emit: search
+  roots: ["@folders"]
+  maxFiles: 5000
+  contentCapKb: 64
+
+# The idea is the key, widened into a few literal terms first, so "files about trip logistics" finds an
+# itinerary that never says "logistics".
+- name: fileConceptSearch
+  kind: files
+  emit: search
+  agentic: true
+  intent: "files in the user's own folders that concern the given idea or topic"
+  maxProbes: 5
+  roots: ["@folders"]
+  maxFiles: 5000
+  contentCapKb: 64

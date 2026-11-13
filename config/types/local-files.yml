@@ -1,0 +1,124 @@
+# FILES and FOLDERS in the folders the world's owner has named (`folders:` in config/world.yml), walked
+# live by the producers in producers/local-files.yml. Rows are metadata; `content` exists only when a
+# query filters on it, and then holds the matching lines.
+#
+#   MATCH (me:AssistantUser)-[:HAS_FILE]->(f:File)
+#   WHERE f.path STARTS WITH 'documents/' AND f.ext = 'md' AND toLower(f.content) CONTAINS 'foobar'
+#   RETURN f.path, f.content
+#
+# The schema line for HAS_FILE lists the folders this world has named, so a question saying "under
+# documents" can become the path prefix. With no folder named, neither type appears.
+- name: File
+  visibility: internal
+  userAnchor: false
+  description: "A file in one of the user's own folders (documents, notes, projects), reached from the user: (me:AssistantUser)-[:HAS_FILE]->(f:File). Its path starts with the folder's name. A row is metadata; f.content exists only when the query filters on it, and is then only the matching lines."
+  virtualJoins:
+    - anchorLabel: AssistantUser
+      relationship: HAS_FILE
+      keyField: id
+      recordKeyField: ownerKey
+      producer: worldFiles
+      description: "Files in the user's own folders. Filter by metadata (f.path, f.name, f.ext, f.dir, f.modifiedAt, f.createdAt, f.sizeBytes), or match content CASE-INSENSITIVELY with `toLower(f.content) CONTAINS '<lowercase term>'` — f.content is then ONLY the matching lines, never the whole file. Always lowercase a content match: the search ignores case but the graph re-applies your filter, so a bare `f.content CONTAINS` drops a file whose only match is capitalised. For files in a folder use `f.path STARTS WITH '<folder>/'` (every depth) — written plainly, not through toLower, it is also what keeps the read to that folder; `f.dir = '<folder>'` is one level only. f.ext is lower case without the dot: markdown is 'md'."
+      maxFanoutTotal: 5000
+    # The term is the filter: files whose content contains it.
+    - anchorLabel: Concept
+      relationship: RELEVANT_TO
+      via: keyword
+      keyField: value
+      recordKeyField: matchedFor
+      producer: fileContentSearch
+      description: "Files in the user's own folders whose CONTENT contains the literal term — seed (:Concept {value:'<term>'}) and pin [:RELEVANT_TO {via:'keyword'}]. The matching lines are on f.content."
+    # The idea, widened into literal terms first; r.probe says which one matched.
+    - anchorLabel: Concept
+      relationship: RELEVANT_TO
+      via: agentic-rag
+      keyField: value
+      recordKeyField: matchedFor
+      producer: fileConceptSearch
+      description: "Files in the user's own folders that are ABOUT an idea whose exact words may not appear — seed (:Concept {value:'<idea>'}) and pin [:RELEVANT_TO {via:'agentic-rag'}]. For a literal term prefer via:'keyword'."
+  examples:
+    - q: "which markdown files under documents mention foobar"
+      cypher: |
+        MATCH (me:AssistantUser)-[:HAS_FILE]->(f:File)
+        WHERE f.path STARTS WITH 'documents/' AND f.ext = 'md' AND toLower(f.content) CONTAINS 'foobar'
+        RETURN f.path, f.content
+    - q: "which of my files mention the renewal"
+      cypher: |
+        MATCH (me:AssistantUser)-[:HAS_FILE]->(f:File)
+        WHERE toLower(f.content) CONTAINS 'renewal'
+        RETURN f.path, f.content
+    - q: "which of my files are about gardening"
+      cypher: |
+        MATCH (:Concept {value:'gardening'})-[r:RELEVANT_TO {via:'agentic-rag'}]->(f:File)
+        RETURN f.path, f.content, r.probe
+    - q: "what files changed in the last week"
+      cypher: |
+        MATCH (me:AssistantUser)-[:HAS_FILE]->(f:File)
+        WHERE datetime(f.modifiedAt) > datetime() - duration('P7D')
+        RETURN f.path, f.modifiedAt ORDER BY f.modifiedAt DESC
+    - q: "which files mention both apples and oranges"
+      cypher: |
+        MATCH (me:AssistantUser)-[:HAS_FILE]->(f:File)
+        WHERE toLower(f.content) CONTAINS 'apples' AND toLower(f.content) CONTAINS 'oranges'
+        RETURN f.path, f.content
+    - q: "what are my three largest files"
+      cypher: |
+        MATCH (me:AssistantUser)-[:HAS_FILE]->(f:File)
+        RETURN f.path, f.sizeBytes ORDER BY f.sizeBytes DESC LIMIT 3
+    - q: "where on disk is my expense report"
+      cypher: |
+        MATCH (me:AssistantUser)-[:HAS_FILE]->(f:File)
+        WHERE toLower(f.name) CONTAINS 'expense'
+        RETURN f.path, f.url
+  properties:
+    path:
+      description: "The folder's name, then the path inside it ('documents/2026/plan.md') — the node identity. Files in a folder: f.path STARTS WITH '<folder>/'."
+      metadata:
+        identity: "true"
+    name: "File name including extension."
+    ext: "Lower-cased extension without the dot ('md', 'pdf')."
+    dir: "The path's directory part ('documents/2026'). Matches one level only; prefer f.path STARTS WITH for 'under'."
+    depth: "Directory levels below the folders, as a NUMBER: 'documents/plan.md' is 1, 'documents/2026/plan.md' is 2."
+    url: "file:// URL of the real file on disk — return it when the user wants to open the file."
+    sizeBytes: "File size in bytes."
+    modifiedAt: "Last-modified time (ISO-8601 instant); filter recency with datetime(f.modifiedAt)."
+    createdAt: "When the file appeared here, where the filesystem records it, else its modified time (ISO-8601 instant)."
+    content: "Present ONLY when the query filters on it with `toLower(f.content) CONTAINS '…'`: the matching lines with one line either side, never the whole file."
+
+- name: Folder
+  visibility: internal
+  userAnchor: false
+  description: "A directory in one of the user's own folders, reached from the user: (me:AssistantUser)-[:HAS_FOLDER]->(d:Folder). fileCount and sizeBytes count the files DIRECTLY in it. Folders have no content; for the files in one use HAS_FILE with f.path STARTS WITH d.path + '/'."
+  virtualJoins:
+    - anchorLabel: AssistantUser
+      relationship: HAS_FOLDER
+      keyField: id
+      recordKeyField: ownerKey
+      producer: worldFolders
+      description: "Directories in the user's own folders, each with the count and size of its direct files. Use for \"what folders do I have\", \"which folder has the most files\", \"empty folders\". For the files themselves use HAS_FILE."
+      maxFanoutTotal: 5000
+  examples:
+    - q: "what folders do I have"
+      cypher: |
+        MATCH (me:AssistantUser)-[:HAS_FOLDER]->(d:Folder)
+        RETURN d.path, d.fileCount ORDER BY d.path
+    - q: "which files are in my projects folder"
+      cypher: |
+        MATCH (me:AssistantUser)-[:HAS_FOLDER]->(d:Folder)
+        WHERE toLower(d.name) CONTAINS 'projects'
+        MATCH (me)-[:HAS_FILE]->(f:File)
+        WHERE f.path STARTS WITH d.path + '/'
+        RETURN f.path ORDER BY f.path
+  properties:
+    path:
+      description: "The folder's name, then the path inside it ('documents/2026') — the node identity."
+      metadata:
+        identity: "true"
+    name: "Directory name (last path segment)."
+    dir: "The parent's path ('' for a named folder itself)."
+    depth: "Levels below the folders, as a NUMBER: 'documents' is 0, 'documents/2026' is 1."
+    url: "file:// URL of the real directory."
+    fileCount: "Number of files DIRECTLY in this folder (not recursive); 0 means empty."
+    sizeBytes: "Total size in bytes of the files DIRECTLY in this folder."
+    modifiedAt: "The directory's last-modified time (ISO-8601 instant)."
+    createdAt: "The directory's creation time where recorded, else its modified time (ISO-8601 instant)."
