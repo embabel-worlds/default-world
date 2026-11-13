@@ -18,7 +18,7 @@
       keyField: id
       recordKeyField: ownerKey
       producer: worldFiles
-      description: "Files in the user's own folders. Filter by metadata (f.path, f.name, f.ext, f.dir, f.modifiedAt, f.createdAt, f.sizeBytes), or match content CASE-INSENSITIVELY with `toLower(f.content) CONTAINS '<lowercase term>'` — f.content is then ONLY the matching lines, never the whole file. Always lowercase a content match: the search ignores case but the graph re-applies your filter, so a bare `f.content CONTAINS` drops a file whose only match is capitalised. For files in a folder use `f.path STARTS WITH '<folder>/'` (every depth); `f.dir = '<folder>'` is one level only. f.ext is lower case without the dot: markdown is 'md'."
+      description: "Files in the user's own folders. Filter by metadata (f.path, f.name, f.ext, f.dir, f.modifiedAt, f.createdAt, f.sizeBytes), or match content CASE-INSENSITIVELY with `toLower(f.content) CONTAINS '<lowercase term>'` — f.content is then ONLY the matching lines, never the whole file. Always lowercase a content match: the search ignores case but the graph re-applies your filter, so a bare `f.content CONTAINS` drops a file whose only match is capitalised. For files in a folder use `f.path STARTS WITH '<folder>/'` (every depth) — written plainly, not through toLower, it is also what keeps the read to that folder; `f.dir = '<folder>'` is one level only. f.ext is lower case without the dot: markdown is 'md'."
       maxFanoutTotal: 5000
     # The term is the filter: files whose content contains it.
     - anchorLabel: Concept
