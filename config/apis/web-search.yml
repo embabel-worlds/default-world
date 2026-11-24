@@ -10,12 +10,17 @@
 # https://api.search.brave.com/). If the key is missing the API is
 # skipped at load time — no other chat behaviour is affected.
 #
-# The research realm vendors the same spec under the same `brave` name.
-# The loader dedupes API entries by URL, not name, so both load when the
-# realm is installed; world-tier entries are learned first, so this
-# entry wins the shared `brave` gateway namespace. The specs are kept
-# identical — if you change brave.yaml here, change realm-research's copy
-# too (and vice versa).
+# The research realm declares the same API under the same `brave` name,
+# so each works without the other. API names are one namespace across the
+# world and its realms; a later declaration that is the SAME API (same
+# spec content, servers, auth, token-env, capability-tags and every other
+# field that shapes a call) is that API, loaded once with no problem. This
+# world-tier entry is learned first, so it holds the `brave` gateway
+# namespace and its credential. If the two ever differ in any of those,
+# the realm's copy is a different API: it is loaded as `brave_research`
+# and the realm reads degraded with a problem naming the fields that
+# differ. So keep this entry and brave.yaml identical to realm-research's
+# — change one, change the other.
 #
 # `capability-tags` declares what this API IS FOR, so code that has to
 # pick a search tool without an LLM in the loop — person research, for
