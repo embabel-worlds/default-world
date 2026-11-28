@@ -34,6 +34,12 @@
 # nodes, and it requires realm-scope so the skill the agent needs is here when the agent is.
 # config/world.yml names its app as what opens on first arrival. Uninstall it when it has done its
 # job; the scope realm stays.
+# The skill start-here requires: how to build a realm around a scope the person owns. A realm's
+# requires are checked, not fetched, so what a default realm depends on must be a default too, and
+# listed first. One skill and a README, keyless.
+- name: scope
+  repo: https://github.com/embabel-worlds/realm-scope.git
+  version: "main"
 - name: start-here
   repo: https://github.com/embabel-worlds/realm-start-here.git
   version: "main"
