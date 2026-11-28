@@ -27,8 +27,8 @@
   name: Put a coding agent to work
   surface: all
   description: >-
-    Your appliance is already registered with Claude Code. This is the two minutes that turns
-    that into a realm — and the tour waits while you are in your terminal.
+    Two minutes from a registered Claude Code to a realm it built — and the tour waits while you
+    are in your terminal. No Claude Code yet? The Start here app has the install step.
 
   steps:
     - say: |
@@ -36,8 +36,10 @@
         agent talking to your world over MCP — reading the graph, writing to it, and authoring
         realms, views and handlers without anybody hand-editing YAML.
 
-        **Setup already registered it.** `claude mcp add` ran during install, pointed at this
-        world's code door, with a token minted for you. There is nothing to configure.
+        **If Claude Code was on this machine during setup, it is already registered:** `claude mcp
+        add` ran then, pointed at this world's code door, with a token minted for you. If it was
+        not, the **Start here** app under Apps has the install command for this machine and the
+        registration step; come back here once `claude` runs.
 
     - open: panel.realms
       say: |
