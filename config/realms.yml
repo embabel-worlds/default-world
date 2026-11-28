@@ -28,9 +28,10 @@
 - name: chess
   repo: https://github.com/embabel-worlds/realm-chess.git
   version: "main"
-# The first screen of a new world: an app that reads the world and says what to do next — get a
-# coding agent, point it at the code door, watch the handshake land, then the first prompts, written
-# against the realms installed. Keyless, four small views over the appliance's own configuration
+# The first screen of a new world, the BUILDING kind of start: an app that reads the world and says
+# what to do next — get a coding agent, point it at the code door, watch the handshake land, then the
+# first prompts, written against the realms installed. A sibling start for a person who adds existing
+# realms and asks will stand beside it, which is why this one says which it is. Keyless, four small views over the appliance's own configuration
 # nodes, and it requires realm-scope so the skill the agent needs is here when the agent is.
 # config/world.yml names its app as what opens on first arrival. Uninstall it when it has done its
 # job; the scope realm stays.
@@ -40,8 +41,8 @@
 - name: scope
   repo: https://github.com/embabel-worlds/realm-scope.git
   version: "main"
-- name: start-here
-  repo: https://github.com/embabel-worlds/realm-start-here.git
+- name: start-here-building
+  repo: https://github.com/embabel-worlds/realm-start-here-building.git
   version: "main"
 # THE MEMORY REALMS ARE OPT-IN. Each is one more system under the shared Memory label
 # (types/memory.yml), and on a new machine none of them has anything to read: Omnigraph and Graphiti

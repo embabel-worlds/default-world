@@ -53,13 +53,13 @@ fallbackCodingLlm:
 # next-steps, and so does a tour or an app this world does not have.
 #
 # THE WORLD DECIDES THIS, never a realm: two realms each claiming the first arrival has no good
-# answer, and a template choosing is one line in a file it owns. This world opens Start here, the
-# app the start-here realm (config/realms.yml) ships: it reads the world and walks the person
+# answer, and a template choosing is one line in a file it owns. This world opens Start here:
+# building, the app the start-here-building realm (config/realms.yml) ships: it reads the world and walks the person
 # through getting a coding agent, pointing it here, and the first things to ask — ticking each
 # step off as the world shows it done. A template that wants What next, or its own tour, says so.
 #
 # An existing world keeps its own world.yml, which shadows this one, so it never gets this block
-# — and gets next-steps, the default. The start-here realm still arrives there through
+# — and gets next-steps, the default. The start-here-building realm still arrives there through
 # realms.yml, which is a live tier, so its app is under Apps in every world.
 welcome:
-  open: app:start-here
+  open: app:start-here-building
